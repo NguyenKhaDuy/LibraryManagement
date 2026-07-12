@@ -58,4 +58,7 @@ public class ReadersEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_account")
     private AccountEntity accountEntity;
+
+    @OneToOne(mappedBy = "readersEntity", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
+    private CartEntity cartEntity;
 }

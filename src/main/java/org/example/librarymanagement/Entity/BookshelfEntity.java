@@ -28,6 +28,9 @@ public class BookshelfEntity {
     @Column(name = "capacity")
     private Long capacity;
 
+    @Column(name = "current_capacity")
+    private Long currentCapacity;
+
     @Enumerated(EnumType.STRING)
     private Status status;
 
