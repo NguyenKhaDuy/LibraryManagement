@@ -41,6 +41,9 @@ public class StaffEntity {
     @DateTimeFormat(pattern = "dd-MM-yyyy")
     private LocalDate dateStart;
 
+    @Column(name = "gender")
+    private String gender;
+
     @Lob
     @Column(name = "avatar", columnDefinition = "LONGBLOB")
     private byte[] avatar;

@@ -26,7 +26,7 @@ public class AccountEntity {
     private String email;
 
     @Column(name = "role")
-    private Long role;
+    private String role;
 
     @Enumerated(EnumType.STRING)
     private Status status;
@@ -35,9 +35,9 @@ public class AccountEntity {
     @DateTimeFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime createdAt;
 
-    @OneToOne(mappedBy = "accountEntity")
+    @OneToOne(mappedBy = "accountEntity", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
     private ReadersEntity readersEntity;
 
-    @OneToOne(mappedBy = "accountEntity")
+    @OneToOne(mappedBy = "accountEntity", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
     private StaffEntity staffEntity;
 }

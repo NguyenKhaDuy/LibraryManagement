@@ -74,4 +74,7 @@ public class BooksEntity {
 
     @OneToMany(mappedBy = "booksEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     private List<ImportBookDetailEntity> importBookDetailEntities = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "booksEntities", fetch = FetchType.LAZY)
+    private List<CartEntity> cartEntities = new ArrayList<>();
 }

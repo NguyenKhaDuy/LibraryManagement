@@ -21,10 +21,6 @@ public class LibraryCardEntity {
     @DateTimeFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime dateOfIssue;
 
-    @Column(name = "date_start")
-    @DateTimeFormat(pattern = "dd-MM-yyyy")
-    private LocalDate dateStart;
-
     @Column(name = "expiration_date")
     @DateTimeFormat(pattern = "dd-MM-yyyy")
     private LocalDate expirationDate;
