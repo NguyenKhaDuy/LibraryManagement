@@ -78,8 +78,15 @@ export function statusClass(status) {
 }
 
 export function firstImage(book) {
-    const image = book && book.imageDTOS && book.imageDTOS[0] && book.imageDTOS[0].imageBase64;
-    return image ? "data:image/jpeg;base64," + image : "";
+    const images = bookImages(book);
+    return images.length ? images[0] : "";
+}
+
+export function bookImages(book) {
+    if (!book || !Array.isArray(book.imageDTOS)) return [];
+    return book.imageDTOS.map(function (item) {
+        return item && item.imageBase64 ? "data:image/jpeg;base64," + item.imageBase64 : "";
+    }).filter(Boolean);
 }
 
 export function primaryLabel(row) {

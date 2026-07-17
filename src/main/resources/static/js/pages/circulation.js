@@ -67,12 +67,14 @@ async function openTicketDetail(ticket) {
 
 function renderTicketDetail(ticket) {
     openDrawer("Phiếu mượn", ticket.idTicket, [
+        '<div class="page-stack">',
         detailGrid([
             ["Mã phiếu", ticket.idTicket], ["Độc giả", get(ticket, "reader.fullName")], ["Nhân viên", get(ticket, "staff.fullName")],
             ["Ngày mượn", ticket.borrowingDate], ["Hạn trả", ticket.dueDate], ["Trạng thái", ticket.status], ["Tổng phạt", ticket.totalFine]
         ]),
         '<div class="button-row"><button class="button button-primary" id="editTicketButton" type="button">Sửa phiếu</button><button class="button button-secondary" data-status="APPROVED" type="button">Duyệt</button><button class="button button-secondary" data-status="REJECTED" type="button">Từ chối</button><button class="button button-secondary" data-status="COMPLETED" type="button">Hoàn tất</button><button class="button button-danger" id="deleteTicketButton" type="button">Xóa phiếu</button></div>',
-        detailItems(ticket.borrowDetailTicketDTOS || [])
+        detailItems(ticket.borrowDetailTicketDTOS || []),
+        '</div>'
     ].join(""), function () {
         document.getElementById("editTicketButton").addEventListener("click", function () {
             openBorrowForm(true, loadTickets, ticket);

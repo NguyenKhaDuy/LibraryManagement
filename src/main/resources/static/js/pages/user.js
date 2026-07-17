@@ -160,11 +160,13 @@ async function openUserLoanDetail(ticket) {
 
 function renderUserLoanDetail(ticket) {
     openDrawer("Phiếu mượn", ticket.idTicket, [
+        '<div class="page-stack">',
         detailGrid([
             ["Mã phiếu", ticket.idTicket], ["Ngày mượn", ticket.borrowingDate], ["Hạn trả", ticket.dueDate],
             ["Số lượng", ticket.quantity], ["Tổng phạt", ticket.totalFine], ["Trạng thái", ticket.status]
         ]),
-        detailItems(ticket.borrowDetailTicketDTOS || [])
+        detailItems(ticket.borrowDetailTicketDTOS || []),
+        '</div>'
     ].join(""));
 }
 

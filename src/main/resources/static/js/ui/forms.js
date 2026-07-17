@@ -14,14 +14,24 @@ export function fieldsHtml(fields, values) {
         let input;
         if (f.type === "select") {
             input = '<select name="' + escAttr(f.name) + '"' + attrs + '><option value=""></option>' + (f.options || []).map(function (opt) {
-                return '<option value="' + escAttr(opt) + '"' + (String(value) === String(opt) ? " selected" : "") + '>' + esc(opt) + '</option>';
+                const optValue = typeof opt === "object" ? opt.value : opt;
+                const optLabel = typeof opt === "object" ? opt.label : opt;
+                return '<option value="' + escAttr(optValue) + '"' + (String(value) === String(optValue) ? " selected" : "") + '>' + esc(optLabel) + '</option>';
             }).join("") + '</select>';
         } else if (f.type === "textarea") {
             input = '<textarea name="' + escAttr(f.name) + '"' + attrs + '>' + esc(value || "") + '</textarea>';
         } else if (f.type === "datetime") {
             input = '<input name="' + escAttr(f.name) + '" type="datetime-local" value="' + escAttr(formatDateTimeInput(value)) + '"' + attrs + '>';
         } else if (f.type === "file") {
-            input = '<input name="' + escAttr(f.name) + '" type="file"' + fileAttrs + attrs + '>';
+            const previewId = "preview-" + f.name;
+            const existing = f.existingImages || [];
+            const existingHtml = existing.length
+                ? '<div class="image-preview-grid" data-existing-images>' + existing.map(function (src) {
+                    return '<img class="image-thumb" src="' + src + '" alt="">';
+                }).join("") + "</div>"
+                : "";
+            input = existingHtml + '<input name="' + escAttr(f.name) + '" type="file"' + fileAttrs + attrs + ' data-image-preview="' + escAttr(previewId) + '">' +
+                '<div class="image-preview-grid" id="' + escAttr(previewId) + '" data-new-images></div>';
         } else {
             input = '<input name="' + escAttr(f.name) + '" type="' + escAttr(f.type || "text") + '" value="' + escAttr(value || "") + '"' + (f.type === "number" ? ' step="any"' : "") + attrs + '>';
         }
@@ -31,6 +41,35 @@ export function fieldsHtml(fields, values) {
 
 export function fieldInline(id, label, type) {
     return '<label class="field"><span>' + esc(label) + '</span><input id="' + escAttr(id) + '" type="' + escAttr(type || "text") + '"></label>';
+}
+
+export function selectInline(id, label, options, placeholder) {
+    options = options || [];
+    return '<label class="field"><span>' + esc(label) + '</span><select id="' + escAttr(id) + '"><option value="">' + esc(placeholder || "Tất cả") + '</option>' +
+        options.map(function (opt) {
+            const optValue = typeof opt === "object" ? opt.value : opt;
+            const optLabel = typeof opt === "object" ? opt.label : opt;
+            return '<option value="' + escAttr(optValue) + '">' + esc(optLabel) + "</option>";
+        }).join("") + "</select></label>";
+}
+
+export function bindImagePreviews(root) {
+    if (!root) return;
+    root.querySelectorAll("[data-image-preview]").forEach(function (input) {
+        const target = document.getElementById(input.dataset.imagePreview);
+        if (!target) return;
+        input.addEventListener("change", function () {
+            target.innerHTML = "";
+            Array.from(input.files || []).forEach(function (file) {
+                if (!file.type.startsWith("image/")) return;
+                const img = document.createElement("img");
+                img.className = "image-thumb";
+                img.alt = file.name;
+                img.src = URL.createObjectURL(file);
+                target.appendChild(img);
+            });
+        });
+    });
 }
 
 export function lineEditorHtml(id, specs) {
