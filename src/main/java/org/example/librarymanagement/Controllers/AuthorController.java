@@ -50,7 +50,7 @@ public class AuthorController {
         return new ResponseEntity<>(messageResponse, HttpStatus.OK);
     }
 
-    @DeleteMapping(value = "/api/admin/author/id-author={id}")
+    @DeleteMapping(value = "/api/admin/author/id-author={idauthor}")
     public ResponseEntity<Object> deleteAuthor(@PathVariable("idauthor") String idauthor) {
         MessageResponse messageResponse = authorService.deleteAuthor(idauthor);
         return new ResponseEntity<>(messageResponse, HttpStatus.OK);

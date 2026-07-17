@@ -4,6 +4,7 @@ import org.example.librarymanagement.Entity.BooksEntity;
 import org.example.librarymanagement.Entity.ImportBookDetailEntity;
 import org.example.librarymanagement.Entity.ImportBookEntity;
 import org.example.librarymanagement.Entity.StaffEntity;
+import org.example.librarymanagement.Entity.SupplierEntity;
 import org.example.librarymanagement.Model.DTO.*;
 import org.example.librarymanagement.Model.Requests.ImportBookRequest;
 import org.example.librarymanagement.Model.Responses.DataResponse;
@@ -11,6 +12,7 @@ import org.example.librarymanagement.Model.Responses.MessageResponse;
 import org.example.librarymanagement.Repository.BookRepository;
 import org.example.librarymanagement.Repository.ImportBookReopsitory;
 import org.example.librarymanagement.Repository.StaffRepository;
+import org.example.librarymanagement.Repository.SupplierRepository;
 import org.example.librarymanagement.Services.ImportBookService;
 import org.example.librarymanagement.Utils.ConvertByteToBase64;
 import org.example.librarymanagement.Utils.RandomIdUtils;
@@ -37,6 +39,8 @@ public class ImportBookServiceImpl implements ImportBookService {
     ImportBookReopsitory importBookReopsitory;
     @Autowired
     StaffRepository staffRepository;
+    @Autowired
+    SupplierRepository supplierRepository;
 
     @Override
     public Page<ImportBookDTO> getImportBooks(Integer pageNo) {
@@ -167,6 +171,7 @@ public class ImportBookServiceImpl implements ImportBookService {
     public MessageResponse addImportBook(ImportBookRequest importBookRequest) {
         MessageResponse messageResponse = new MessageResponse();
         StaffEntity staffEntity = new StaffEntity();
+        SupplierEntity supplierEntity = new SupplierEntity();
         ImportBookEntity importBookEntity = new ImportBookEntity();
         modelMapper.map(importBookRequest, importBookEntity);
         importBookEntity.setIdImport(RandomIdUtils.generateRandomId("IMP", 15));
@@ -177,7 +182,15 @@ public class ImportBookServiceImpl implements ImportBookService {
             messageResponse.setStatus(HttpStatus.NOT_FOUND);
             return messageResponse;
         }
+        try {
+            supplierEntity = supplierRepository.findById(importBookRequest.getSupplierId()).get();
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("Supplier Not Found");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
         importBookEntity.setStaffEntity(staffEntity);
+        importBookEntity.setSupplierEntity(supplierEntity);
 
         List<ImportBookDetailEntity> importBookDetailEntities = new ArrayList<>();
         importBookRequest.getImportDetailBookRequests().stream().forEach(importDetailBookRequest -> {
@@ -185,6 +198,7 @@ public class ImportBookServiceImpl implements ImportBookService {
             modelMapper.map(importDetailBookRequest, importBookDetailEntity);
             BooksEntity booksEntity= bookRepository.findById(importDetailBookRequest.getBookId()).get();
             importBookDetailEntity.setBooksEntity(booksEntity);
+            importBookDetailEntity.setImportBookEntity(importBookEntity);
             importBookDetailEntities.add(importBookDetailEntity);
         });
         importBookEntity.setImportBookDetailEntities(importBookDetailEntities);
@@ -198,9 +212,16 @@ public class ImportBookServiceImpl implements ImportBookService {
     public MessageResponse updateImportBook(ImportBookRequest importBookRequest) {
         MessageResponse messageResponse = new MessageResponse();
         StaffEntity staffEntity = null;
-        ImportBookEntity importBookEntity = importBookReopsitory.findById(importBookRequest.getStaffId()).get();
+        SupplierEntity supplierEntity = null;
+        ImportBookEntity importBookEntity;
+        try {
+            importBookEntity = importBookReopsitory.findById(importBookRequest.getIdImport()).get();
+        } catch (NoSuchElementException ex) {
+            messageResponse.setMessage("Import Book Not Found");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
         modelMapper.map(importBookRequest, importBookEntity);
-        importBookEntity.setIdImport(RandomIdUtils.generateRandomId("IMP", 15));
         try {
             staffEntity = staffRepository.findById(importBookRequest.getStaffId()).get();
         }catch (NoSuchElementException ex){
@@ -208,7 +229,15 @@ public class ImportBookServiceImpl implements ImportBookService {
             messageResponse.setStatus(HttpStatus.NOT_FOUND);
             return messageResponse;
         }
+        try {
+            supplierEntity = supplierRepository.findById(importBookRequest.getSupplierId()).get();
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("Supplier Not Found");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
         importBookEntity.setStaffEntity(staffEntity);
+        importBookEntity.setSupplierEntity(supplierEntity);
 
         importBookEntity.getImportBookDetailEntities().clear();
 
@@ -218,6 +247,7 @@ public class ImportBookServiceImpl implements ImportBookService {
             modelMapper.map(importDetailBookRequest, importBookDetailEntity);
             BooksEntity booksEntity= bookRepository.findById(importDetailBookRequest.getBookId()).get();
             importBookDetailEntity.setBooksEntity(booksEntity);
+            importBookDetailEntity.setImportBookEntity(importBookEntity);
             importBookDetailEntities.add(importBookDetailEntity);
         });
         importBookEntity.setImportBookDetailEntities(importBookDetailEntities);

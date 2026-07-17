@@ -183,15 +183,9 @@ public class BookServiceImpl implements BooksService {
         modelMapper.map(bookRequest, booksEntity);
         booksEntity.setIdBook(RandomIdUtils.generateRandomId("B", 15));
 
-        bookRequest.getImages().stream().forEach(image -> {
-            try {
-                ImageEntity imageEntity = new ImageEntity();
-                imageEntity.setImage(image.getBytes());
-                booksEntity.getImageEntities().add(imageEntity);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        if (hasImages(bookRequest)) {
+            replaceImages(booksEntity, bookRequest);
+        }
 
         booksEntity.setStatus(Status.AVAILABLE);
         booksEntity.setCreatedAt(LocalDateTime.now());
@@ -258,18 +252,9 @@ public class BookServiceImpl implements BooksService {
         }
         modelMapper.map(bookRequest, booksEntity);
 
-        booksEntity.getImageEntities().clear();
-        List<ImageEntity> imageEntities = new ArrayList<>();
-        bookRequest.getImages().stream().forEach(image -> {
-            try {
-                ImageEntity imageEntity = new ImageEntity();
-                imageEntity.setImage(image.getBytes());
-               imageEntities.add(imageEntity);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        booksEntity.setImageEntities(imageEntities);
+        if (hasImages(bookRequest)) {
+            replaceImages(booksEntity, bookRequest);
+        }
         booksEntity.setStatus(bookRequest.getStatus());
         booksEntity.setAuthorEntity(authorEntity);
         if (bookshelfEntity.getCurrentCapacity() == 0){
@@ -277,6 +262,7 @@ public class BookServiceImpl implements BooksService {
             messageResponse.setStatus(HttpStatus.BAD_REQUEST);
             return messageResponse;
         }
+        booksEntity.setBookshelfEntity(bookshelfEntity);
         booksEntity.setPublishingHouseEntity(publishingHouseEntity);
         booksEntity.setCategoryEntity(categoryEntity);
         booksEntity.setUpdatedAt(LocalDateTime.now());
@@ -301,5 +287,25 @@ public class BookServiceImpl implements BooksService {
             messageResponse.setStatus(HttpStatus.NOT_FOUND);
             return messageResponse;
         }
+    }
+
+    private boolean hasImages(BookRequest bookRequest) {
+        return bookRequest.getImages() != null && bookRequest.getImages().stream().anyMatch(image -> image != null && !image.isEmpty());
+    }
+
+    private void replaceImages(BooksEntity booksEntity, BookRequest bookRequest) {
+        booksEntity.getImageEntities().clear();
+        bookRequest.getImages().stream()
+                .filter(image -> image != null && !image.isEmpty())
+                .forEach(image -> {
+                    try {
+                        ImageEntity imageEntity = new ImageEntity();
+                        imageEntity.setImage(image.getBytes());
+                        imageEntity.setBooksEntity(booksEntity);
+                        booksEntity.getImageEntities().add(imageEntity);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 }

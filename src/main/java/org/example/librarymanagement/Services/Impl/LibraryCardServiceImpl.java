@@ -101,11 +101,21 @@ public class LibraryCardServiceImpl implements LibraryCardService {
         MessageResponse messageResponse = new MessageResponse();
         LibraryCardEntity libraryCardEntity = null;
         try {
-            libraryCardEntity = libraryCardRepository.findById(libraryCardRequest.getIdReader()).get();
+            libraryCardEntity = libraryCardRepository.findById(libraryCardRequest.getIdCard()).get();
         }catch (NoSuchElementException ex){
             messageResponse.setMessage("No such Card");
             messageResponse.setStatus(HttpStatus.NOT_FOUND);
             return messageResponse;
+        }
+        if (libraryCardRequest.getIdReader() != null && !libraryCardRequest.getIdReader().isBlank()) {
+            try {
+                ReadersEntity readersEntity = readerRepository.findById(libraryCardRequest.getIdReader()).get();
+                libraryCardEntity.setReadersEntity(readersEntity);
+            } catch (NoSuchElementException ex) {
+                messageResponse.setMessage("No such reader");
+                messageResponse.setStatus(HttpStatus.NOT_FOUND);
+                return messageResponse;
+            }
         }
         modelMapper.map(libraryCardRequest, libraryCardEntity);
         libraryCardEntity.setStatus(libraryCardRequest.getStatus());

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kho Tri Thức</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script defer type="module" th:src="@{/js/main.js}"></script>
+</head>
+<body>
+<noscript>
+    <div class="noscript">Vui lòng bật JavaScript để sử dụng hệ thống thư viện.</div>
+</noscript>
+
+<section class="login-screen" id="loginScreen" aria-labelledby="loginTitle">
+    <div class="login-brand">
+        <img th:src="@{/assets/logo.png}" alt="Kho Tri Thức">
+        <div>
+            <p class="eyebrow">Kho Tri Thức</p>
+            <h1 id="loginTitle">Quản lý thư viện</h1>
+            <p class="login-copy">Tra cứu, mượn trả, quản lý độc giả và vận hành kho sách trong một không gian làm việc thống nhất.</p>
+        </div>
+    </div>
+
+    <div class="login-card">
+        <form id="loginForm" class="auth-form" autocomplete="on">
+            <div class="form-heading">
+                <p class="eyebrow">Đăng nhập</p>
+                <h2>Chào mừng quay lại</h2>
+            </div>
+            <label class="field">
+                <span>Tên đăng nhập</span>
+                <input name="username" type="text" autocomplete="username" required>
+            </label>
+            <label class="field">
+                <span>Mật khẩu</span>
+                <input name="password" type="password" autocomplete="current-password" required>
+            </label>
+            <button class="button button-primary" type="submit">Đăng nhập</button>
+            <button class="button button-secondary" type="button" id="showRegisterButton">Tạo tài khoản độc giả</button>
+        </form>
+
+        <form id="registerForm" class="auth-form is-hidden" autocomplete="on">
+            <div class="form-heading">
+                <p class="eyebrow">Đăng ký độc giả</p>
+                <h2>Tạo tài khoản mới</h2>
+            </div>
+            <div class="form-grid compact-grid" id="registerFields"></div>
+            <div class="button-row">
+                <button class="button button-primary" type="submit">Tạo tài khoản</button>
+                <button class="button button-ghost" type="button" id="backToLoginButton">Quay lại đăng nhập</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<div class="product-shell is-hidden" id="productShell">
+    <aside class="sidebar" aria-label="Điều hướng chính">
+        <a class="brand" th:href="@{/}" aria-label="Kho Tri Thức">
+            <img th:src="@{/assets/logo.png}" alt="Kho Tri Thức">
+            <span>
+                <strong>Kho Tri Thức</strong>
+                <small id="roleLabel">Thư viện</small>
+            </span>
+        </a>
+
+        <nav class="nav" id="mainNav" aria-label="Chức năng"></nav>
+
+        <div class="account-card">
+            <div class="avatar" id="accountAvatar">KT</div>
+            <div>
+                <strong id="accountName">Người dùng</strong>
+                <span id="accountMeta">Đang hoạt động</span>
+            </div>
+        </div>
+    </aside>
+
+    <div class="workspace">
+        <header class="topbar">
+            <div class="title-block">
+                <p class="eyebrow" id="pageEyebrow">Tổng quan</p>
+                <h1 id="pageTitle">Bảng điều khiển</h1>
+            </div>
+            <div class="topbar-actions">
+                <button class="button button-secondary" type="button" id="refreshButton">Làm mới</button>
+                <button class="button button-ghost" type="button" id="logoutButton">Đăng xuất</button>
+            </div>
+        </header>
+
+        <main class="content" id="pageRoot" tabindex="-1"></main>
+    </div>
+</div>
+
+<aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+        <header class="drawer-header">
+            <div>
+                <p class="eyebrow" id="drawerEyebrow">Chi tiết</p>
+                <h2 id="drawerTitle">Bản ghi</h2>
+            </div>
+            <button class="icon-button" type="button" id="drawerCloseButton" aria-label="Đóng">×</button>
+        </header>
+        <div class="drawer-body" id="drawerBody"></div>
+    </div>
+</aside>
+
+<div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>
