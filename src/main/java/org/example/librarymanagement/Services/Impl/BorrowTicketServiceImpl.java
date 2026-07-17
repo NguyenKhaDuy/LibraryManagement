@@ -3,6 +3,7 @@ package org.example.librarymanagement.Services.Impl;
 import org.example.librarymanagement.Entity.*;
 import org.example.librarymanagement.Model.DTO.*;
 import org.example.librarymanagement.Model.Requests.AcceptRequest;
+import org.example.librarymanagement.Model.Requests.BorrowTicketDetailRequest;
 import org.example.librarymanagement.Model.Requests.BorrowTicketRequest;
 import org.example.librarymanagement.Model.Responses.DataResponse;
 import org.example.librarymanagement.Model.Responses.MessageResponse;
@@ -20,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -43,64 +45,9 @@ public class BorrowTicketServiceImpl implements BorrowTicketService {
     public Page<BorrowTicketDTO> getAllBorrowTickets(Integer pageNo) {
         Pageable pageable = PageRequest.of(pageNo - 1, 20);
         Page<BorrowTicketEntity> borrowTicketEntities = borrowTicketRepository.findAll(pageable);
-        List<BorrowTicketDTO> borrowTicketDTOS = borrowTicketEntities.stream().map(borrowTicketEntity -> {
-            BorrowTicketDTO borrowTicketDTO = new BorrowTicketDTO();
-            modelMapper.map(borrowTicketEntity, borrowTicketDTO);
-
-            Reader reader = new Reader();
-            modelMapper.map(borrowTicketEntity.getReadersEntity(), reader);
-            reader.setAvatar(ConvertByteToBase64.toBase64(borrowTicketEntity.getReadersEntity().getAvatar()));
-            borrowTicketDTO.setReader(reader);
-
-            Staff staff = new Staff();
-            modelMapper.map(borrowTicketEntity.getStaffEntity(), staff);
-            staff.setAvatar(ConvertByteToBase64.toBase64(borrowTicketEntity.getStaffEntity().getAvatar()));
-            borrowTicketDTO.setStaff(staff);
-
-            List<BorrowDetailTicketEntity> borrowDetailTicketEntities = borrowTicketEntity.getBorrowDetailTicketEntities();
-            List<BorrowDetailTicketDTO> borrowDetailTicketDTOS = borrowDetailTicketEntities.stream().map(borrowDetailTicketEntity -> {
-                BorrowDetailTicketDTO borrowDetailTicketDTO = new BorrowDetailTicketDTO();
-                modelMapper.map(borrowDetailTicketEntity, borrowDetailTicketDTO);
-
-                BooksDTO booksDTO = new BooksDTO();
-                modelMapper.map(borrowDetailTicketEntity.getBooksEntity(), booksDTO);
-                List<ImageDTO> imageDTOS = borrowDetailTicketEntity.getBooksEntity().getImageEntities().stream().map(imageEntity -> {
-                    ImageDTO imageDTO = new ImageDTO();
-                    imageDTO.setIdImage(imageEntity.getIdImage());
-                    imageDTO.setImageBase64(ConvertByteToBase64.toBase64(imageEntity.getImage()));
-                    return imageDTO;
-                }).toList();
-                booksDTO.setImageDTOS(imageDTOS);
-
-                //tác giả
-                AuthorDTO authorDTO = new AuthorDTO();
-                modelMapper.map(borrowDetailTicketEntity.getBooksEntity().getAuthorEntity(), authorDTO);
-                booksDTO.setAuthorDTO(authorDTO);
-
-                //catefory
-                CategoryDTO categoryDTO = new CategoryDTO();
-                modelMapper.map(borrowDetailTicketEntity.getBooksEntity().getCategoryEntity(), categoryDTO);
-                booksDTO.setCategoryDTO(categoryDTO);
-
-
-                //kệ sách
-                BookshelfDTO bookshelfDTO = new BookshelfDTO();
-                modelMapper.map(borrowDetailTicketEntity.getBooksEntity().getBookshelfEntity(), bookshelfDTO);
-                booksDTO.setBookshelfDTO(bookshelfDTO);
-
-                //nhà xuất bản
-                PublishingHouseDTO publishingHouseDTO = new PublishingHouseDTO();
-                modelMapper.map(borrowDetailTicketEntity.getBooksEntity().getPublishingHouseEntity(), publishingHouseDTO);
-                booksDTO.setPublishingHouseDTO(publishingHouseDTO);
-
-                borrowDetailTicketDTO.setBooksDTO(booksDTO);
-
-                return borrowDetailTicketDTO;
-            }).toList();
-            borrowTicketDTO.setBorrowDetailTicketDTOS(borrowDetailTicketDTOS);
-
-            return borrowTicketDTO;
-        }).toList();
+        List<BorrowTicketDTO> borrowTicketDTOS = borrowTicketEntities.stream()
+                .map(this::toBorrowTicketDTO)
+                .toList();
         return new PageImpl<>(borrowTicketDTOS, borrowTicketEntities.getPageable(), borrowTicketEntities.getTotalElements());
     }
 
@@ -117,64 +64,9 @@ public class BorrowTicketServiceImpl implements BorrowTicketService {
             return messageResponse;
         }
         List<BorrowTicketEntity> borrowTicketEntities = borrowTicketRepository.findByReadersEntity(readersEntity);
-        List<BorrowTicketDTO> borrowTicketDTOS = borrowTicketEntities.stream().map(borrowTicketEntity -> {
-            BorrowTicketDTO borrowTicketDTO = new BorrowTicketDTO();
-            modelMapper.map(borrowTicketEntity, borrowTicketDTO);
-
-            Reader reader = new Reader();
-            modelMapper.map(borrowTicketEntity.getReadersEntity(), reader);
-            reader.setAvatar(ConvertByteToBase64.toBase64(borrowTicketEntity.getReadersEntity().getAvatar()));
-            borrowTicketDTO.setReader(reader);
-
-            Staff staff = new Staff();
-            modelMapper.map(borrowTicketEntity.getStaffEntity(), staff);
-            staff.setAvatar(ConvertByteToBase64.toBase64(borrowTicketEntity.getStaffEntity().getAvatar()));
-            borrowTicketDTO.setStaff(staff);
-
-            List<BorrowDetailTicketEntity> borrowDetailTicketEntities = borrowTicketEntity.getBorrowDetailTicketEntities();
-            List<BorrowDetailTicketDTO> borrowDetailTicketDTOS = borrowDetailTicketEntities.stream().map(borrowDetailTicketEntity -> {
-                BorrowDetailTicketDTO borrowDetailTicketDTO = new BorrowDetailTicketDTO();
-                modelMapper.map(borrowDetailTicketEntity, borrowDetailTicketDTO);
-
-                BooksDTO booksDTO = new BooksDTO();
-                modelMapper.map(borrowDetailTicketEntity.getBooksEntity(), booksDTO);
-                List<ImageDTO> imageDTOS = borrowDetailTicketEntity.getBooksEntity().getImageEntities().stream().map(imageEntity -> {
-                    ImageDTO imageDTO = new ImageDTO();
-                    imageDTO.setIdImage(imageEntity.getIdImage());
-                    imageDTO.setImageBase64(ConvertByteToBase64.toBase64(imageEntity.getImage()));
-                    return imageDTO;
-                }).toList();
-                booksDTO.setImageDTOS(imageDTOS);
-
-                //tác giả
-                AuthorDTO authorDTO = new AuthorDTO();
-                modelMapper.map(borrowDetailTicketEntity.getBooksEntity().getAuthorEntity(), authorDTO);
-                booksDTO.setAuthorDTO(authorDTO);
-
-                //catefory
-                CategoryDTO categoryDTO = new CategoryDTO();
-                modelMapper.map(borrowDetailTicketEntity.getBooksEntity().getCategoryEntity(), categoryDTO);
-                booksDTO.setCategoryDTO(categoryDTO);
-
-
-                //kệ sách
-                BookshelfDTO bookshelfDTO = new BookshelfDTO();
-                modelMapper.map(borrowDetailTicketEntity.getBooksEntity().getBookshelfEntity(), bookshelfDTO);
-                booksDTO.setBookshelfDTO(bookshelfDTO);
-
-                //nhà xuất bản
-                PublishingHouseDTO publishingHouseDTO = new PublishingHouseDTO();
-                modelMapper.map(borrowDetailTicketEntity.getBooksEntity().getPublishingHouseEntity(), publishingHouseDTO);
-                booksDTO.setPublishingHouseDTO(publishingHouseDTO);
-
-                borrowDetailTicketDTO.setBooksDTO(booksDTO);
-
-                return borrowDetailTicketDTO;
-            }).toList();
-            borrowTicketDTO.setBorrowDetailTicketDTOS(borrowDetailTicketDTOS);
-
-            return borrowTicketDTO;
-        }).toList();
+        List<BorrowTicketDTO> borrowTicketDTOS = borrowTicketEntities.stream()
+                .map(this::toBorrowTicketDTO)
+                .toList();
         dataResponse.setData(borrowTicketDTOS);
         dataResponse.setMessage("Success");
         dataResponse.setStatus(HttpStatus.OK);
@@ -187,62 +79,7 @@ public class BorrowTicketServiceImpl implements BorrowTicketService {
         DataResponse dataResponse = new DataResponse();
         try {
             BorrowTicketEntity borrowTicketEntity = borrowTicketRepository.findById(idTicker).get();
-            BorrowTicketDTO borrowTicketDTO = new BorrowTicketDTO();
-            modelMapper.map(borrowTicketEntity, borrowTicketDTO);
-
-            Reader reader = new Reader();
-            modelMapper.map(borrowTicketEntity.getReadersEntity(), reader);
-            reader.setAvatar(ConvertByteToBase64.toBase64(borrowTicketEntity.getReadersEntity().getAvatar()));
-            borrowTicketDTO.setReader(reader);
-
-            Staff staff = new Staff();
-            modelMapper.map(borrowTicketEntity.getStaffEntity(), staff);
-            staff.setAvatar(ConvertByteToBase64.toBase64(borrowTicketEntity.getStaffEntity().getAvatar()));
-            borrowTicketDTO.setStaff(staff);
-
-            List<BorrowDetailTicketEntity> borrowDetailTicketEntities = borrowTicketEntity.getBorrowDetailTicketEntities();
-            List<BorrowDetailTicketDTO> borrowDetailTicketDTOS = borrowDetailTicketEntities.stream().map(borrowDetailTicketEntity -> {
-                BorrowDetailTicketDTO borrowDetailTicketDTO = new BorrowDetailTicketDTO();
-                modelMapper.map(borrowDetailTicketEntity, borrowDetailTicketDTO);
-
-                BooksDTO booksDTO = new BooksDTO();
-                modelMapper.map(borrowDetailTicketEntity.getBooksEntity(), booksDTO);
-                List<ImageDTO> imageDTOS = borrowDetailTicketEntity.getBooksEntity().getImageEntities().stream().map(imageEntity -> {
-                    ImageDTO imageDTO = new ImageDTO();
-                    imageDTO.setIdImage(imageEntity.getIdImage());
-                    imageDTO.setImageBase64(ConvertByteToBase64.toBase64(imageEntity.getImage()));
-                    return imageDTO;
-                }).toList();
-                booksDTO.setImageDTOS(imageDTOS);
-
-                //tác giả
-                AuthorDTO authorDTO = new AuthorDTO();
-                modelMapper.map(borrowDetailTicketEntity.getBooksEntity().getAuthorEntity(), authorDTO);
-                booksDTO.setAuthorDTO(authorDTO);
-
-                //catefory
-                CategoryDTO categoryDTO = new CategoryDTO();
-                modelMapper.map(borrowDetailTicketEntity.getBooksEntity().getCategoryEntity(), categoryDTO);
-                booksDTO.setCategoryDTO(categoryDTO);
-
-
-                //kệ sách
-                BookshelfDTO bookshelfDTO = new BookshelfDTO();
-                modelMapper.map(borrowDetailTicketEntity.getBooksEntity().getBookshelfEntity(), bookshelfDTO);
-                booksDTO.setBookshelfDTO(bookshelfDTO);
-
-                //nhà xuất bản
-                PublishingHouseDTO publishingHouseDTO = new PublishingHouseDTO();
-                modelMapper.map(borrowDetailTicketEntity.getBooksEntity().getPublishingHouseEntity(), publishingHouseDTO);
-                booksDTO.setPublishingHouseDTO(publishingHouseDTO);
-
-                borrowDetailTicketDTO.setBooksDTO(booksDTO);
-
-                return borrowDetailTicketDTO;
-            }).toList();
-            borrowTicketDTO.setBorrowDetailTicketDTOS(borrowDetailTicketDTOS);
-
-            dataResponse.setData(borrowTicketDTO);
+            dataResponse.setData(toBorrowTicketDTO(borrowTicketEntity));
             dataResponse.setMessage("Success");
             dataResponse.setStatus(HttpStatus.OK);
             return dataResponse;
@@ -257,25 +94,22 @@ public class BorrowTicketServiceImpl implements BorrowTicketService {
     public MessageResponse addBorrowTicket(BorrowTicketRequest borrowTicketRequest) {
         MessageResponse messageResponse = new MessageResponse();
         BorrowTicketEntity borrowTicketEntity = new BorrowTicketEntity();
-        ReadersEntity readersEntity = new ReadersEntity();
-        StaffEntity staffEntity = new StaffEntity();
-        LibraryCardEntity libraryCardEntity = null;
-        try {
-            readersEntity = readerRepository.findById(borrowTicketRequest.getReaderId()).get();
-            libraryCardEntity = libraryCardRepository.findById(borrowTicketRequest.getCardLibraryId()).get();
-            if (!readersEntity.getStatus().equals(Status.ACTIVE) && !readersEntity.getAccountEntity().getStatus().equals(Status.ACTIVE)) {
-                messageResponse.setMessage("Reader is not active, reader " + readersEntity.getStatus().toString());
-                messageResponse.setStatus(HttpStatus.BAD_REQUEST);
-                return messageResponse;
-            }
-            if (libraryCardEntity.getExpirationDate().isBefore(LocalDate.now())) {
-                messageResponse.setMessage("Library Card expired");
-                messageResponse.setStatus(HttpStatus.BAD_REQUEST);
-                return messageResponse;
-            }
-        } catch (NoSuchElementException ex) {
-            messageResponse.setMessage("Can not find reader");
-            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+
+        ReadersEntity readersEntity = findReader(borrowTicketRequest.getReaderId(), messageResponse);
+        if (readersEntity == null) {
+            return messageResponse;
+        }
+        if (!validateReaderActive(readersEntity, messageResponse)) {
+            return messageResponse;
+        }
+        if (resolveLibraryCard(borrowTicketRequest.getCardLibraryId(), readersEntity, messageResponse) == null) {
+            return messageResponse;
+        }
+
+        StaffEntity staffEntity;
+        if (isBlank(borrowTicketRequest.getStaffId())) {
+            messageResponse.setMessage("Staff id is required");
+            messageResponse.setStatus(HttpStatus.BAD_REQUEST);
             return messageResponse;
         }
         try {
@@ -286,8 +120,17 @@ public class BorrowTicketServiceImpl implements BorrowTicketService {
             return messageResponse;
         }
 
-        for (BorrowDetailTicketEntity borrowDetailTicketEntity : borrowTicketEntity.getBorrowDetailTicketEntities()) {
-            BooksEntity booksEntity = bookRepository.findById(borrowDetailTicketEntity.getBooksEntity().getIdBook()).get();
+        modelMapper.map(borrowTicketRequest, borrowTicketEntity);
+        borrowTicketEntity.setIdTicket(RandomIdUtils.generateRandomId("T", 15));
+
+        List<BorrowDetailTicketEntity> borrowDetailTicketEntities = buildBorrowDetails(borrowTicketRequest, borrowTicketEntity, messageResponse);
+        if (borrowDetailTicketEntities == null) {
+            return messageResponse;
+        }
+        borrowTicketEntity.setBorrowDetailTicketEntities(borrowDetailTicketEntities);
+
+        for (BorrowDetailTicketEntity borrowDetailTicketEntity : borrowDetailTicketEntities) {
+            BooksEntity booksEntity = borrowDetailTicketEntity.getBooksEntity();
             Long newQuantity = booksEntity.getQuantity() - 1;
             booksEntity.setQuantity(newQuantity);
             if (newQuantity == 0) {
@@ -296,31 +139,8 @@ public class BorrowTicketServiceImpl implements BorrowTicketService {
             bookRepository.save(booksEntity);
         }
 
-        modelMapper.map(borrowTicketRequest, borrowTicketEntity);
-
-        //id
-        borrowTicketEntity.setIdTicket(RandomIdUtils.generateRandomId("T", 15));
-
-        //ticket detail
-        List<BorrowDetailTicketEntity> borrowDetailTicketEntities = new ArrayList<>();
-        borrowTicketRequest.getBorrowTicketDetailRequests().stream().forEach(borrowTicketDetailRequest -> {
-            BorrowDetailTicketEntity borrowDetailTicketEntity = new BorrowDetailTicketEntity();
-            modelMapper.map(borrowTicketDetailRequest, borrowDetailTicketEntity);
-            BooksEntity booksEntity = bookRepository.findById(borrowTicketDetailRequest.getBookId()).get();
-            borrowDetailTicketEntity.setBooksEntity(booksEntity);
-            borrowDetailTicketEntity.setBorrowTicketEntity(borrowTicketEntity);
-            borrowDetailTicketEntities.add(borrowDetailTicketEntity);
-        });
-        borrowTicketEntity.setBorrowDetailTicketEntities(borrowDetailTicketEntities);
-
-        borrowTicketEntity.setStatus(Status.BORROWING);
-
-        //staff
         borrowTicketEntity.setStaffEntity(staffEntity);
-
-        //reader
         borrowTicketEntity.setReadersEntity(readersEntity);
-
         borrowTicketEntity.setStatus(Status.APPROVED);
 
         borrowTicketRepository.save(borrowTicketEntity);
@@ -334,45 +154,27 @@ public class BorrowTicketServiceImpl implements BorrowTicketService {
     public MessageResponse addBorrowTicketByReader(BorrowTicketRequest borrowTicketRequest) {
         MessageResponse messageResponse = new MessageResponse();
         BorrowTicketEntity borrowTicketEntity = new BorrowTicketEntity();
-        ReadersEntity readersEntity = new ReadersEntity();
-        LibraryCardEntity libraryCardEntity = null;
-        try {
-            readersEntity = readerRepository.findById(borrowTicketRequest.getReaderId()).get();
-            libraryCardEntity = libraryCardRepository.findById(borrowTicketRequest.getCardLibraryId()).get();
-            if (!readersEntity.getStatus().equals(Status.ACTIVE) && !readersEntity.getAccountEntity().getStatus().equals(Status.ACTIVE)) {
-                messageResponse.setMessage("Reader is not active, reader " + readersEntity.getStatus().toString());
-                messageResponse.setStatus(HttpStatus.BAD_REQUEST);
-                return messageResponse;
-            }
-            if (!libraryCardEntity.getExpirationDate().isBefore(LocalDate.now())) {
-                messageResponse.setMessage("Library Card expired");
-                messageResponse.setStatus(HttpStatus.BAD_REQUEST);
-                return messageResponse;
-            }
-        } catch (NoSuchElementException ex) {
-            messageResponse.setMessage("Can not find reader");
-            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+
+        ReadersEntity readersEntity = findReader(borrowTicketRequest.getReaderId(), messageResponse);
+        if (readersEntity == null) {
             return messageResponse;
         }
-        modelMapper.map(borrowTicketRequest, borrowTicketEntity);
+        if (!validateReaderActive(readersEntity, messageResponse)) {
+            return messageResponse;
+        }
+        if (resolveLibraryCard(borrowTicketRequest.getCardLibraryId(), readersEntity, messageResponse) == null) {
+            return messageResponse;
+        }
 
-        //id
+        modelMapper.map(borrowTicketRequest, borrowTicketEntity);
         borrowTicketEntity.setIdTicket(RandomIdUtils.generateRandomId("T", 15));
 
-        //ticket detail
-        List<BorrowDetailTicketEntity> borrowDetailTicketEntities = new ArrayList<>();
-        borrowTicketRequest.getBorrowTicketDetailRequests().stream().forEach(borrowTicketDetailRequest -> {
-            BorrowDetailTicketEntity borrowDetailTicketEntity = new BorrowDetailTicketEntity();
-            modelMapper.map(borrowTicketDetailRequest, borrowDetailTicketEntity);
-            BooksEntity booksEntity = bookRepository.findById(borrowTicketDetailRequest.getBookId()).get();
-            borrowDetailTicketEntity.setBooksEntity(booksEntity);
-            borrowDetailTicketEntities.add(borrowDetailTicketEntity);
-        });
+        List<BorrowDetailTicketEntity> borrowDetailTicketEntities = buildBorrowDetails(borrowTicketRequest, borrowTicketEntity, messageResponse);
+        if (borrowDetailTicketEntities == null) {
+            return messageResponse;
+        }
         borrowTicketEntity.setBorrowDetailTicketEntities(borrowDetailTicketEntities);
-
-        //reader
         borrowTicketEntity.setReadersEntity(readersEntity);
-
         borrowTicketEntity.setStatus(Status.WAITTING);
 
         borrowTicketRepository.save(borrowTicketEntity);
@@ -430,17 +232,17 @@ public class BorrowTicketServiceImpl implements BorrowTicketService {
             modelMapper.map(borrowTicketRequest, borrowTicketEntity);
 
             //ticket detail
-            List<BorrowDetailTicketEntity> borrowDetailTicketEntities = new ArrayList<>();
+            borrowTicketEntity.getBorrowDetailTicketEntities().clear();
             borrowTicketRequest.getBorrowTicketDetailRequests().stream().forEach(borrowTicketDetailRequest -> {
                 BorrowDetailTicketEntity borrowDetailTicketEntity = new BorrowDetailTicketEntity();
                 modelMapper.map(borrowTicketDetailRequest, borrowDetailTicketEntity);
                 BooksEntity booksEntity = bookRepository.findById(borrowTicketDetailRequest.getBookId()).get();
                 borrowDetailTicketEntity.setBooksEntity(booksEntity);
-                borrowDetailTicketEntities.add(borrowDetailTicketEntity);
+                borrowDetailTicketEntity.setBorrowTicketEntity(borrowTicketEntity);
+                borrowTicketEntity.getBorrowDetailTicketEntities().add(borrowDetailTicketEntity);
             });
-            borrowTicketEntity.setBorrowDetailTicketEntities(borrowDetailTicketEntities);
 
-            if (borrowTicketRequest.getStatus().equals(Status.COMPLETED)) {
+            if (borrowTicketRequest.getStatus() != null && borrowTicketRequest.getStatus().equals(Status.COMPLETED)) {
                 borrowTicketEntity.getBorrowDetailTicketEntities().stream().forEach(borrowDetailTicketEntity -> {
                    BooksEntity booksEntity = borrowDetailTicketEntity.getBooksEntity();
                    if (booksEntity.getStatus().equals(Status.BORROWED)) {
@@ -483,5 +285,208 @@ public class BorrowTicketServiceImpl implements BorrowTicketService {
             messageResponse.setStatus(HttpStatus.NOT_FOUND);
             return messageResponse;
         }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private ReadersEntity findReader(String readerId, MessageResponse messageResponse) {
+        if (isBlank(readerId)) {
+            messageResponse.setMessage("Reader id is required");
+            messageResponse.setStatus(HttpStatus.BAD_REQUEST);
+            return null;
+        }
+        try {
+            return readerRepository.findById(readerId).get();
+        } catch (NoSuchElementException ex) {
+            messageResponse.setMessage("Can not find reader");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return null;
+        }
+    }
+
+    private boolean validateReaderActive(ReadersEntity readersEntity, MessageResponse messageResponse) {
+        boolean readerActive = Status.ACTIVE.equals(readersEntity.getStatus());
+        boolean accountActive = readersEntity.getAccountEntity() != null
+                && Status.ACTIVE.equals(readersEntity.getAccountEntity().getStatus());
+        if (!readerActive && !accountActive) {
+            messageResponse.setMessage("Reader is not active, reader " + readersEntity.getStatus());
+            messageResponse.setStatus(HttpStatus.BAD_REQUEST);
+            return false;
+        }
+        return true;
+    }
+
+    private LibraryCardEntity resolveLibraryCard(String cardLibraryId, ReadersEntity readersEntity, MessageResponse messageResponse) {
+        LibraryCardEntity libraryCardEntity;
+        if (!isBlank(cardLibraryId)) {
+            try {
+                libraryCardEntity = libraryCardRepository.findById(cardLibraryId).get();
+            } catch (NoSuchElementException ex) {
+                messageResponse.setMessage("Can not find library card");
+                messageResponse.setStatus(HttpStatus.NOT_FOUND);
+                return null;
+            }
+        } else {
+            libraryCardEntity = findValidLibraryCard(readersEntity.getIdReader());
+            if (libraryCardEntity == null) {
+                libraryCardEntity = createDefaultLibraryCard(readersEntity);
+            }
+        }
+        if (libraryCardEntity.getExpirationDate() != null && libraryCardEntity.getExpirationDate().isBefore(LocalDate.now())) {
+            messageResponse.setMessage("Library Card expired");
+            messageResponse.setStatus(HttpStatus.BAD_REQUEST);
+            return null;
+        }
+        return libraryCardEntity;
+    }
+
+    private LibraryCardEntity findValidLibraryCard(String idReader) {
+        LibraryCardEntity libraryCardEntity = libraryCardRepository.findByReadersEntity_IdReaderAndStatus(idReader, Status.ACTIVE)
+                .stream()
+                .filter(this::isLibraryCardValid)
+                .findFirst()
+                .orElse(null);
+        if (libraryCardEntity != null) {
+            return libraryCardEntity;
+        }
+        return libraryCardRepository.findByReadersEntity_IdReader(idReader)
+                .stream()
+                .filter(this::isLibraryCardValid)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private boolean isLibraryCardValid(LibraryCardEntity card) {
+        return card.getExpirationDate() == null || !card.getExpirationDate().isBefore(LocalDate.now());
+    }
+
+    private LibraryCardEntity createDefaultLibraryCard(ReadersEntity readersEntity) {
+        LibraryCardEntity libraryCardEntity = new LibraryCardEntity();
+        libraryCardEntity.setIdCard(RandomIdUtils.generateRandomId("C", 15));
+        libraryCardEntity.setDateOfIssue(LocalDateTime.now());
+        libraryCardEntity.setExpirationDate(LocalDate.now().plusYears(1));
+        libraryCardEntity.setStatus(Status.ACTIVE);
+        libraryCardEntity.setReadersEntity(readersEntity);
+        return libraryCardRepository.save(libraryCardEntity);
+    }
+
+    private List<BorrowDetailTicketEntity> buildBorrowDetails(BorrowTicketRequest borrowTicketRequest, BorrowTicketEntity borrowTicketEntity, MessageResponse messageResponse) {
+        if (borrowTicketRequest.getBorrowTicketDetailRequests() == null || borrowTicketRequest.getBorrowTicketDetailRequests().isEmpty()) {
+            messageResponse.setMessage("At least one book is required");
+            messageResponse.setStatus(HttpStatus.BAD_REQUEST);
+            return null;
+        }
+        List<BorrowDetailTicketEntity> borrowDetailTicketEntities = new ArrayList<>();
+        for (BorrowTicketDetailRequest borrowTicketDetailRequest : borrowTicketRequest.getBorrowTicketDetailRequests()) {
+            if (isBlank(borrowTicketDetailRequest.getBookId())) {
+                messageResponse.setMessage("Book id is required");
+                messageResponse.setStatus(HttpStatus.BAD_REQUEST);
+                return null;
+            }
+            try {
+                BorrowDetailTicketEntity borrowDetailTicketEntity = new BorrowDetailTicketEntity();
+                modelMapper.map(borrowTicketDetailRequest, borrowDetailTicketEntity);
+                BooksEntity booksEntity = bookRepository.findById(borrowTicketDetailRequest.getBookId()).get();
+                borrowDetailTicketEntity.setBooksEntity(booksEntity);
+                borrowDetailTicketEntity.setBorrowTicketEntity(borrowTicketEntity);
+                borrowDetailTicketEntities.add(borrowDetailTicketEntity);
+            } catch (NoSuchElementException ex) {
+                messageResponse.setMessage("Can not find book");
+                messageResponse.setStatus(HttpStatus.NOT_FOUND);
+                return null;
+            }
+        }
+        return borrowDetailTicketEntities;
+    }
+
+    private BorrowTicketDTO toBorrowTicketDTO(BorrowTicketEntity borrowTicketEntity) {
+        BorrowTicketDTO borrowTicketDTO = new BorrowTicketDTO();
+        modelMapper.map(borrowTicketEntity, borrowTicketDTO);
+        borrowTicketDTO.setReader(toReader(borrowTicketEntity.getReadersEntity()));
+        borrowTicketDTO.setStaff(toStaff(borrowTicketEntity.getStaffEntity()));
+        borrowTicketDTO.setBorrowDetailTicketDTOS(toBorrowDetailDTOs(borrowTicketEntity.getBorrowDetailTicketEntities()));
+        return borrowTicketDTO;
+    }
+
+    private Reader toReader(ReadersEntity readersEntity) {
+        if (readersEntity == null) {
+            return null;
+        }
+        Reader reader = new Reader();
+        modelMapper.map(readersEntity, reader);
+        reader.setAvatar(ConvertByteToBase64.toBase64(readersEntity.getAvatar()));
+        return reader;
+    }
+
+    private Staff toStaff(StaffEntity staffEntity) {
+        if (staffEntity == null) {
+            return null;
+        }
+        Staff staff = new Staff();
+        modelMapper.map(staffEntity, staff);
+        staff.setAvatar(ConvertByteToBase64.toBase64(staffEntity.getAvatar()));
+        return staff;
+    }
+
+    private List<BorrowDetailTicketDTO> toBorrowDetailDTOs(List<BorrowDetailTicketEntity> borrowDetailTicketEntities) {
+        if (borrowDetailTicketEntities == null) {
+            return List.of();
+        }
+        return borrowDetailTicketEntities.stream()
+                .map(this::toBorrowDetailDTO)
+                .toList();
+    }
+
+    private BorrowDetailTicketDTO toBorrowDetailDTO(BorrowDetailTicketEntity borrowDetailTicketEntity) {
+        BorrowDetailTicketDTO borrowDetailTicketDTO = new BorrowDetailTicketDTO();
+        modelMapper.map(borrowDetailTicketEntity, borrowDetailTicketDTO);
+        BooksEntity booksEntity = borrowDetailTicketEntity.getBooksEntity();
+        if (booksEntity != null) {
+            borrowDetailTicketDTO.setBooksDTO(toBooksDTO(booksEntity));
+        }
+        return borrowDetailTicketDTO;
+    }
+
+    private BooksDTO toBooksDTO(BooksEntity booksEntity) {
+        BooksDTO booksDTO = new BooksDTO();
+        modelMapper.map(booksEntity, booksDTO);
+
+        List<ImageEntity> imageEntities = booksEntity.getImageEntities() != null
+                ? booksEntity.getImageEntities()
+                : List.of();
+        booksDTO.setImageDTOS(imageEntities.stream().map(imageEntity -> {
+            ImageDTO imageDTO = new ImageDTO();
+            imageDTO.setIdImage(imageEntity.getIdImage());
+            imageDTO.setImageBase64(ConvertByteToBase64.toBase64(imageEntity.getImage()));
+            return imageDTO;
+        }).toList());
+
+        if (booksEntity.getAuthorEntity() != null) {
+            AuthorDTO authorDTO = new AuthorDTO();
+            modelMapper.map(booksEntity.getAuthorEntity(), authorDTO);
+            booksDTO.setAuthorDTO(authorDTO);
+        }
+
+        if (booksEntity.getCategoryEntity() != null) {
+            CategoryDTO categoryDTO = new CategoryDTO();
+            modelMapper.map(booksEntity.getCategoryEntity(), categoryDTO);
+            booksDTO.setCategoryDTO(categoryDTO);
+        }
+
+        if (booksEntity.getBookshelfEntity() != null) {
+            BookshelfDTO bookshelfDTO = new BookshelfDTO();
+            modelMapper.map(booksEntity.getBookshelfEntity(), bookshelfDTO);
+            booksDTO.setBookshelfDTO(bookshelfDTO);
+        }
+
+        if (booksEntity.getPublishingHouseEntity() != null) {
+            PublishingHouseDTO publishingHouseDTO = new PublishingHouseDTO();
+            modelMapper.map(booksEntity.getPublishingHouseEntity(), publishingHouseDTO);
+            booksDTO.setPublishingHouseDTO(publishingHouseDTO);
+        }
+
+        return booksDTO;
     }
 }

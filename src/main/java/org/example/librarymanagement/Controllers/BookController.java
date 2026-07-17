@@ -50,13 +50,13 @@ public class BookController {
     }
 
     @PostMapping(value = "/api/admin/book")
-    public ResponseEntity<Object> addBook(@RequestBody BookRequest bookRequest) {
+    public ResponseEntity<Object> addBook(@ModelAttribute BookRequest bookRequest) {
         MessageResponse messageResponse = booksService.addBook(bookRequest);
         return new ResponseEntity<>(messageResponse, messageResponse.getStatus());
     }
 
     @PutMapping(value = "/api/admin/book")
-    public ResponseEntity<Object> updateBook(@RequestBody BookRequest bookRequest) {
+    public ResponseEntity<Object> updateBook(@ModelAttribute BookRequest bookRequest) {
         MessageResponse messageResponse = booksService.updateBook(bookRequest);
         return new ResponseEntity<>(messageResponse, messageResponse.getStatus());
     }

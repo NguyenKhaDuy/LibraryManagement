@@ -8,6 +8,7 @@ import org.example.librarymanagement.Model.Requests.RegisterRequest;
 import org.example.librarymanagement.Model.Responses.MessageResponse;
 import org.example.librarymanagement.Repository.AccountRepository;
 import org.example.librarymanagement.Repository.CartRepository;
+import org.example.librarymanagement.Repository.LibraryCardRepository;
 import org.example.librarymanagement.Repository.ReaderRepository;
 import org.example.librarymanagement.Repository.StaffRepository;
 import org.example.librarymanagement.Services.AccountService;
@@ -19,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 
@@ -36,6 +38,8 @@ public class AccountServiceImpl implements AccountService {
     PasswordEncoder passwordEncoder;
     @Autowired
     CartRepository cartRepository;
+    @Autowired
+    LibraryCardRepository libraryCardRepository;
 
     @Override
     public MessageResponse RegisterForUser(RegisterRequest registerRequest) {
@@ -66,6 +70,14 @@ public class AccountServiceImpl implements AccountService {
         CartEntity cartEntity = new CartEntity();
         cartEntity.setReadersEntity(readersEntity);
         cartRepository.save(cartEntity);
+
+        LibraryCardEntity libraryCardEntity = new LibraryCardEntity();
+        libraryCardEntity.setIdCard(RandomIdUtils.generateRandomId("C", 15));
+        libraryCardEntity.setDateOfIssue(LocalDateTime.now());
+        libraryCardEntity.setExpirationDate(LocalDate.now().plusYears(1));
+        libraryCardEntity.setStatus(Status.ACTIVE);
+        libraryCardEntity.setReadersEntity(readersEntity);
+        libraryCardRepository.save(libraryCardEntity);
 
         messageResponse.setMessage("Account created successfully");
         messageResponse.setStatus(HttpStatus.OK);

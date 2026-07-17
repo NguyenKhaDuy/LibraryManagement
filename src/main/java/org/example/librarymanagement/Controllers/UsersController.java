@@ -44,7 +44,7 @@ public class UsersController {
     }
 
     @GetMapping(value = "/api/reader/idReader={idReader}")
-    public ResponseEntity<Object> getReaderById(@RequestParam(name = "idReader", defaultValue = "1")  String idReader) {
+    public ResponseEntity<Object> getReaderById(@PathVariable("idReader") String idReader) {
         Object result = usersService.getReaderById(idReader);
         if(result instanceof MessageResponse) {
             return new ResponseEntity<>(result, ((MessageResponse) result).getStatus());
@@ -53,7 +53,7 @@ public class UsersController {
     }
 
     @GetMapping(value = "/api/staff/idStaff={idStaff}")
-    public ResponseEntity<Object> getStaffById(@RequestParam(name = "idStaff", defaultValue = "1")  String idStaff) {
+    public ResponseEntity<Object> getStaffById(@PathVariable("idStaff") String idStaff) {
         Object result = usersService.getStaffById(idStaff);
         if(result instanceof MessageResponse) {
             return new ResponseEntity<>(result, ((MessageResponse) result).getStatus());
@@ -74,13 +74,13 @@ public class UsersController {
     }
 
     @DeleteMapping(value = "/api/reader/idReader={idReader}")
-    public ResponseEntity<Object> deleteReaderById(@RequestParam(name = "idReader", defaultValue = "1")  String idReader) {
+    public ResponseEntity<Object> deleteReaderById(@PathVariable("idReader") String idReader) {
         MessageResponse messageResponse = usersService.deleteReader(idReader);
         return new ResponseEntity<>(messageResponse, messageResponse.getStatus());
     }
 
     @DeleteMapping(value = "/api/staff/idStaff={idStaff}")
-    public ResponseEntity<Object> deleteStaffById(@RequestParam(name = "idStaff", defaultValue = "1")  String idStaff) {
+    public ResponseEntity<Object> deleteStaffById(@PathVariable("idStaff") String idStaff) {
         MessageResponse messageResponse = usersService.deleteStaff(idStaff);
         return new ResponseEntity<>(messageResponse, messageResponse.getStatus());
     }
