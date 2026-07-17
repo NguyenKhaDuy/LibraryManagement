@@ -131,8 +131,8 @@ public class AccountServiceImpl implements AccountService {
                     loginDTO.setEmail(accountEntity.getReadersEntity().getEmail());
                     loginDTO.setAvatar(ConvertByteToBase64.toBase64(accountEntity.getReadersEntity().getAvatar()));
                 }else {
-                    loginDTO.setIdUser(accountEntity.getReadersEntity().getIdReader());
-                    loginDTO.setEmail(accountEntity.getReadersEntity().getEmail());
+                    loginDTO.setIdUser(accountEntity.getStaffEntity().getIdStaff());
+                    loginDTO.setEmail(accountEntity.getStaffEntity().getEmail());
                 }
                 loginDTO.setUsername(loginRequest.getUsername());
                 return loginDTO;

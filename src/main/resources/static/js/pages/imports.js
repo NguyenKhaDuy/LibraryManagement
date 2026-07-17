@@ -77,47 +77,191 @@ function renderImportDetail(row) {
     });
 }
 
-function openImportForm(row) {
+async function openImportForm(row) {
     const isEdit = Boolean(row);
+
+    // ==========================
+    // Load danh sách nhà cung cấp
+    // ==========================
+    let supplierOptions = [];
+    let bookOptions = [];
+
+    try {
+
+        // Lấy tất cả sách
+        let page = 1;
+        let totalPages = 1;
+
+        do {
+            const data = await api("/api/book?pageNo=" + page);
+
+            bookOptions = bookOptions.concat(
+                normalizeRows(data).map(function (book) {
+                    return {
+                        value: book.idBook,
+                        label: book.nameBook + " (" + book.idBook + ")"
+                    };
+                })
+            );
+
+            totalPages = data.total_pages || 1;
+            page++;
+
+        } while (page <= totalPages);
+
+
+        // Lấy tất cả nhà cung cấp
+        page = 1;
+        totalPages = 1;
+
+        do {
+            const data = await api("/api/admin/supplier?pageNo=" + page);
+
+            supplierOptions = supplierOptions.concat(
+                normalizeRows(data).map(function (supplier) {
+                    return {
+                        value: supplier.idSupplier,
+                        label: supplier.nameSupplier
+                    };
+                })
+            );
+
+            totalPages = data.total_pages || 1;
+            page++;
+
+        } while (page <= totalPages);
+
+    } catch (e) {
+        supplierOptions = [];
+        bookOptions = [];
+    }
+
     const fields = [
-        field("idImport", "Mã phiếu", "text", { readonly: true, hidden: !isEdit }),
+        field("idImport", "Mã phiếu", "text", {
+            readonly: true,
+            hidden: !isEdit
+        }),
+
         field("importDate", "Ngày nhập", "date"),
+
         field("totalPrice", "Tổng tiền", "number"),
-        field("staffId", "Mã nhân viên", "text", { value: state.session.idUser, required: true }),
-        field("supplierId", "Mã nhà cung cấp", "number", { required: true }),
-        field("note", "Ghi chú", "textarea", { wide: true })
-    ].filter(function (f) { return !f.hidden; });
-    const values = row ? {
-        idImport: row.idImport,
-        importDate: row.importDate,
-        totalPrice: row.totalPrice,
-        staffId: row.staffId || state.session.idUser,
-        supplierId: get(row, "supplierDTO.idSupplier"),
-        note: row.note
-    } : { staffId: state.session.idUser };
-    openDrawer(isEdit ? "Sửa phiếu nhập" : "Tạo phiếu nhập", "Nhập sách", [
-        '<form id="importForm" class="page-stack">',
-        '<div class="form-grid">' + fieldsHtml(fields, values) + '</div>',
-        lineEditorHtml("importLines", ["bookId:Mã sách", "price:Đơn giá", "quantity:Số lượng", "totalPrice:Thành tiền", "note:Ghi chú"]),
-        '<div class="button-row"><button class="button button-primary" type="submit">Lưu phiếu</button></div>',
-        '</form>'
-    ].join(""), function () {
-        initLineEditor("importLines", { quantity: 1, price: 0, totalPrice: 0 }, (row && row.importBookDetailDTOS || []).map(function (detail) {
-            return {
-                bookId: get(detail, "booksDTO.idBook"),
-                price: detail.price,
-                quantity: detail.quantity,
-                totalPrice: detail.totalPrice,
-                note: detail.note
-            };
-        }));
-        document.getElementById("importForm").addEventListener("submit", async function (event) {
-            event.preventDefault();
-            const payload = formValues(event.currentTarget, fields);
-            payload.importDetailBookRequests = collectLines("importLines", ["bookId", "price", "quantity", "totalPrice", "note"]);
-            await submitJson(isEdit ? "PUT" : "POST", "/api/staff/import/book", payload, "Đã lưu phiếu nhập.");
-            closeDrawer();
-            loadImports();
-        });
+
+        field("staffId", "Mã nhân viên", "text", {
+            value: state.session.idUser,
+            required: true,
+            readonly: true
+        }),
+
+        field("supplierId", "Nhà cung cấp", "select", {
+            required: true,
+            options: supplierOptions
+        }),
+
+        field("note", "Ghi chú", "textarea", {
+            wide: true
+        })
+    ].filter(function (f) {
+        return !f.hidden;
     });
+
+    const values = row
+        ? {
+            idImport: row.idImport,
+            importDate: row.importDate,
+            totalPrice: row.totalPrice,
+            staffId: row.staffId || state.session.idUser,
+            supplierId: get(row, "supplierDTO.idSupplier"),
+            note: row.note
+        }
+        : {
+            staffId: state.session.idUser
+        };
+
+    openDrawer(
+        isEdit ? "Sửa phiếu nhập" : "Tạo phiếu nhập",
+        "Nhập sách",
+        [
+            '<form id="importForm" class="page-stack">',
+            '<div class="form-grid">' +
+            fieldsHtml(fields, values) +
+            "</div>",
+
+            lineEditorHtml(
+                "importLines",
+                [
+                    "bookId:Sách",
+                    "price:Đơn giá",
+                    "quantity:Số lượng",
+                    "totalPrice:Thành tiền",
+                    "note:Ghi chú"
+                ],
+                {
+                    bookId: bookOptions
+                }
+            ),
+
+            '<div class="button-row">',
+            '<button class="button button-primary" type="submit">Lưu phiếu</button>',
+            "</div>",
+            "</form>"
+        ].join(""),
+
+        function () {
+
+            initLineEditor(
+                "importLines",
+                {
+                    quantity: 1,
+                    price: 0,
+                    totalPrice: 0
+                },
+                (row && row.importBookDetailDTOS || []).map(function (detail) {
+                    return {
+                        bookId: get(detail, "booksDTO.idBook"),
+                        price: detail.price,
+                        quantity: detail.quantity,
+                        totalPrice: detail.totalPrice,
+                        note: detail.note
+                    };
+                }),
+                {
+                    bookId: {
+                        type: "select",
+                        options: bookOptions
+                    }
+                }
+            );
+
+            document
+                .getElementById("importForm")
+                .addEventListener("submit", async function (event) {
+
+                    event.preventDefault();
+
+                    const payload = formValues(event.currentTarget, fields);
+
+                    payload.importDetailBookRequests =
+                        collectLines(
+                            "importLines",
+                            [
+                                "bookId",
+                                "price",
+                                "quantity",
+                                "totalPrice",
+                                "note"
+                            ]
+                        );
+
+                    await submitJson(
+                        isEdit ? "PUT" : "POST",
+                        "/api/staff/import/book",
+                        payload,
+                        "Đã lưu phiếu nhập."
+                    );
+
+                    closeDrawer();
+                    loadImports();
+                });
+        }
+    );
 }

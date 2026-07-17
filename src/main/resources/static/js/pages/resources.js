@@ -38,6 +38,32 @@ export async function renderResource(config) {
     await loadResource(config);
 }
 
+function avatarHtml(config, detail) {
+    console.log(detail);
+
+    if (config.title !== "Nhân viên" && config.title !== "Độc giả") {
+        return "";
+    }
+
+    let avatarSrc = "/assets/images/default-avatar.png";
+
+    if (detail.avatar) {
+        avatarSrc = detail.avatar.startsWith("data:image")
+            ? detail.avatar
+            : "data:image/jpeg;base64," + detail.avatar;
+    }
+
+    return `
+        <div class="profile-avatar">
+            <img 
+                src="${esc(avatarSrc)}"
+                alt="${esc(detail.fullName || "Người dùng")}"
+                onerror="this.src='/assets/images/default-avatar.png'"
+            >
+        </div>
+    `;
+}
+
 async function loadResource(config) {
     const pageKey = state.page;
     const pageNo = state.pageNo[pageKey] || 1;
@@ -66,6 +92,7 @@ async function openResourceDetail(config, row) {
         const detail = config.detail ? unwrapData(await api(config.detail(row))) : row;
         openDrawer(config.title, primaryLabel(detail), [
             '<div class="page-stack">',
+            avatarHtml(config, detail),
             detailObject(detail),
             '<div class="button-row"><button class="button button-primary" id="editResourceButton" type="button">Sửa</button><button class="button button-danger" id="deleteResourceButton" type="button">Xóa</button></div>',
             '</div>'
@@ -86,16 +113,51 @@ async function openResourceDetail(config, row) {
 function openResourceForm(config, row) {
     const isEdit = Boolean(row);
     const action = isEdit ? config.update : config.create;
-    const values = row ? flattenForForm(row, action.fields) : {};
-    openDrawer(isEdit ? "Cập nhật" : action.label, config.title, formHtml("resourceForm", action.fields, values, isEdit ? "Lưu thay đổi" : action.label), function () {
-        document.getElementById("resourceForm").addEventListener("submit", async function (event) {
-            event.preventDefault();
-            const payload = formValues(event.currentTarget, action.fields);
-            await submitJson(action.method, action.path, payload, "Đã lưu bản ghi.");
-            closeDrawer();
-            loadResource(config);
-        });
-    });
+
+    const fields = typeof action.fields === "function"
+        ? action.fields()
+        : action.fields;
+
+
+    const values = row
+        ? flattenForForm(row, fields)
+        : {};
+
+
+    openDrawer(
+        isEdit ? "Cập nhật" : action.label,
+        config.title,
+        formHtml(
+            "resourceForm",
+            fields,
+            values,
+            isEdit ? "Lưu thay đổi" : action.label
+        ),
+        function () {
+
+            document
+                .getElementById("resourceForm")
+                .addEventListener("submit", async function(event){
+
+                    event.preventDefault();
+
+                    const payload = formValues(
+                        event.currentTarget,
+                        fields
+                    );
+
+                    await submitJson(
+                        action.method,
+                        action.path,
+                        payload,
+                        "Đã lưu bản ghi."
+                    );
+
+                    closeDrawer();
+                    loadResource(config);
+                });
+        }
+    );
 }
 
 export function renderSetup() {

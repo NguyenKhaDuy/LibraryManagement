@@ -28,6 +28,12 @@ public class PublishingHouseController {
         return new ResponseEntity<>(dataResponse, HttpStatus.OK);
     }
 
+    @GetMapping(value = "/api/admin/publishing-houses")
+    public ResponseEntity<Object> getAllPublishingHouses() {
+        DataResponse dataResponse = publishingHouseService.getAllPublishingHouses();
+        return new ResponseEntity<>(dataResponse, HttpStatus.OK);
+    }
+
     @GetMapping(value = "/api/admin/publishing-house/id={id}")
     public ResponseEntity<Object> getPublishingHouseById(@PathVariable("id") Long id) {
         Object result = publishingHouseService.getPublishingHouseById(id);

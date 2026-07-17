@@ -109,6 +109,20 @@ export async function openBorrowForm(staffMode, afterSave, ticket, presetLines) 
             cardLibraryId = "";
         }
     }
+    let bookOptions = [];
+
+    try {
+        const bookData = await api("/api/books");
+
+        bookOptions = normalizeRows(bookData).map(function (book) {
+            return {
+                value: book.idBook,
+                label: book.nameBook + " (" + book.idBook + ")"
+            };
+        });
+    } catch (err) {
+        bookOptions = [];
+    }
     const fields = [
         isEdit ? field("idTicket", "Mã phiếu", "text", { required: true, readonly: true }) : null,
         field("borrowingDate", "Ngày mượn", "datetime"),
@@ -129,7 +143,19 @@ export async function openBorrowForm(staffMode, afterSave, ticket, presetLines) 
     openDrawer(isEdit ? "Sửa phiếu mượn" : (staffMode ? "Tạo phiếu mượn" : "Tạo yêu cầu mượn"), "Mượn trả", [
         '<form id="borrowForm" class="page-stack">',
         '<div class="form-grid">' + fieldsHtml(fields, values) + '</div>',
-        lineEditorHtml("borrowLines", ["bookId:Mã sách", "statusBorrow:Trạng thái mượn", "statusReturn:Trạng thái trả", "fine:Phạt", "note:Ghi chú"]),
+        lineEditorHtml(
+            "borrowLines",
+            [
+                "bookId:Sách",
+                "statusBorrow:Trạng thái mượn",
+                "statusReturn:Trạng thái trả",
+                "fine:Phạt",
+                "note:Ghi chú"
+            ],
+            {
+                bookId: bookOptions
+            }
+        ),
         '<div class="button-row"><button class="button button-primary" type="submit">Lưu phiếu</button></div>',
         '</form>'
     ].join(""), function () {

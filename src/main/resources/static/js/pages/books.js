@@ -12,13 +12,52 @@ import { errorHtml, setTitle } from "../ui/view.js";
 export async function renderBooks(readerMode) {
     setTitle(readerMode ? "Tra cứu sách" : "Kho sách", readerMode ? "Dành cho độc giả" : "Quản lý danh mục");
     let publisherOptions = [];
+    let authorOptions = [];
+    let categoryOptions = [];
+    let shelfOptions = [];
+
     try {
-        const pubData = await api("/api/admin/publishing-house?pageNo=1");
-        publisherOptions = normalizeRows(pubData).map(function (publisher) {
-            return { value: publisher.idPublishingHouse, label: publisher.name || ("NXB #" + publisher.idPublishingHouse) };
+        // Nhà xuất bản
+        const pubData = await api("/api/admin/publishing-houses");
+        publisherOptions = normalizeRows(pubData).map(function (item) {
+            return {
+                value: item.idPublishingHouse,
+                label: item.name || ("NXB #" + item.idPublishingHouse)
+            };
         });
+
+        // Tác giả
+        const authorData = await api("/api/admin/authors");
+        authorOptions = normalizeRows(authorData).map(function (item) {
+            return {
+                value: item.idAuthor,
+                label: item.fullName || ("TG #" + item.idAuthor)
+            };
+        });
+
+        // Thể loại
+        const categoryData = await api("/api/category");
+        categoryOptions = normalizeRows(categoryData).map(function (item) {
+            return {
+                value: item.idCategory,
+                label: item.nameCategory || ("TL #" + item.idCategory)
+            };
+        });
+
+        // Kệ sách
+        const shelfData = await api("/api/admin/book-shelfs");
+        shelfOptions = normalizeRows(shelfData).map(function (item) {
+            return {
+                value: item.idBookshelf,
+                label: item.location || ("Kệ #" + item.idBookShelf)
+            };
+        });
+
     } catch (err) {
         publisherOptions = [];
+        authorOptions = [];
+        categoryOptions = [];
+        shelfOptions = [];
     }
     els.pageRoot.innerHTML = [
         '<section class="surface">',
@@ -28,9 +67,9 @@ export async function renderBooks(readerMode) {
         '</div>',
         '<div class="toolbar">',
         fieldInline("bookSearch", "Tìm nhanh", "text"),
-        fieldInline("filterAuthor", "Mã tác giả", "text"),
-        fieldInline("filterCategory", "Mã thể loại", "number"),
-        fieldInline("filterShelf", "Mã kệ", "number"),
+        selectInline("filterAuthor", "Tác giả", authorOptions),
+        selectInline("filterCategory", "Thể loại", categoryOptions),
+        selectInline("filterShelf", "Kệ", shelfOptions),
         selectInline("filterPublisher", "Nhà xuất bản", publisherOptions),
         '<button class="button button-secondary" id="bookFilterButton" type="button">Lọc</button>',
         '</div>',
@@ -171,31 +210,166 @@ function renderBookDetail(book, readerMode) {
     });
 }
 
-function openBookForm(book) {
+async function openBookForm(book) {
     const isEdit = Boolean(book);
-    let fields = isEdit ? bookFields : bookFields.filter(function (f) { return f.name !== "idBook" && f.name !== "status"; });
-    if (isEdit) {
-        fields = fields.map(function (f) {
-            if (f.name !== "images") return f;
-            return Object.assign({}, f, { existingImages: bookImages(book) });
+
+    let publisherOptions = [];
+    let authorOptions = [];
+    let categoryOptions = [];
+    let shelfOptions = [];
+
+    try {
+        // Nhà xuất bản
+        const pubData = await api("/api/admin/publishing-house?pageNo=1");
+        publisherOptions = normalizeRows(pubData).map(function (item) {
+            return {
+                value: item.idPublishingHouse,
+                label: item.name || ("NXB #" + item.idPublishingHouse)
+            };
         });
+
+        // Tác giả
+        const authorData = await api("/api/admin/author?pageNo=1");
+        authorOptions = normalizeRows(authorData).map(function (item) {
+            return {
+                value: item.idAuthor,
+                label: item.fullName || ("TG #" + item.idAuthor)
+            };
+        });
+
+        // Thể loại
+        const categoryData = await api("/api/category");
+        categoryOptions = normalizeRows(categoryData).map(function (item) {
+            return {
+                value: item.idCategory,
+                label: item.nameCategory || ("TL #" + item.idCategory)
+            };
+        });
+
+        // Kệ sách
+        const shelfData = await api("/api/admin/book-shelf?pageNo=1");
+        shelfOptions = normalizeRows(shelfData).map(function (item) {
+            return {
+                value: item.idBookshelf,
+                label: item.location || ("Kệ #" + item.idBookshelf)
+            };
+        });
+
+    } catch (err) {
+        publisherOptions = [];
+        authorOptions = [];
+        categoryOptions = [];
+        shelfOptions = [];
     }
-    openDrawer(isEdit ? "Cập nhật sách" : "Thêm sách", "Kho sách", formHtml("bookForm", fields, isEdit ? mapBookToForm(book) : {}, isEdit ? "Lưu thay đổi" : "Thêm sách"), function () {
-        bindImagePreviews(document.getElementById("bookForm"));
-        document.getElementById("bookForm").addEventListener("submit", async function (event) {
-            event.preventDefault();
-            await submitBookForm(isEdit ? "PUT" : "POST", event.currentTarget, fields);
-            closeDrawer();
-            loadBooks(false);
+
+    let fields = isEdit
+        ? [...bookFields]
+        : bookFields.filter(function (f) {
+            return f.name !== "idBook" && f.name !== "status";
         });
+
+    // Đổi các trường ID thành select
+    fields = fields.map(function (f) {
+
+        if (f.name === "authorId") {
+            return {
+                ...f,
+                options: authorOptions
+            };
+        }
+
+        if (f.name === "categoryId") {
+            return {
+                ...f,
+                options: categoryOptions
+            };
+        }
+
+        if (f.name === "bookShelfId") {
+            return {
+                ...f,
+                options: shelfOptions
+            };
+        }
+
+        if (f.name === "publisherId") {
+            return {
+                ...f,
+                options: publisherOptions
+            };
+        }
+
+        if (f.name === "images") {
+            return {
+                ...f,
+                multiple: true,
+                accept: "image/*",
+                existingImages: isEdit ? bookImages(book) : []
+            };
+        }
+
+        return f;
     });
+
+    openDrawer(
+        isEdit ? "Cập nhật sách" : "Thêm sách",
+        "Kho sách",
+        formHtml(
+            "bookForm",
+            fields,
+            isEdit ? mapBookToForm(book) : {},
+            isEdit ? "Lưu thay đổi" : "Thêm sách"
+        ),
+        function () {
+
+            const imageInput = document.querySelector("#bookForm input[name='images']");
+            if (imageInput) {
+                imageInput.multiple = true;
+                imageInput.accept = "image/*";
+            }
+
+            bindImagePreviews(document.getElementById("bookForm"));
+
+            document
+                .getElementById("bookForm")
+                .addEventListener("submit", async function (event) {
+
+                    event.preventDefault();
+
+                    await submitBookForm(
+                        isEdit ? "PUT" : "POST",
+                        event.currentTarget,
+                        fields
+                    );
+
+                    closeDrawer();
+                    loadBooks(false);
+                });
+        }
+    );
 }
 
 async function submitBookForm(method, form, fields) {
+    const formData = new FormData();
+
+    fields.forEach(function (field) {
+        const input = form.elements[field.name];
+        if (!input) return;
+
+        if (field.type === "file") {
+            Array.from(input.files).forEach(function (file) {
+                formData.append(field.name, file);
+            });
+        } else {
+            formData.append(field.name, input.value);
+        }
+    });
+
     const result = await api("/api/admin/book", {
         method: method,
-        body: formDataValues(form, fields)
+        body: formData
     });
+
     toast(result.message || "Đã lưu sách.", "success");
     return result;
 }

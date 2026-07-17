@@ -14,6 +14,7 @@ import org.example.librarymanagement.Repository.LibraryCardRepository;
 import org.example.librarymanagement.Repository.ReaderRepository;
 import org.example.librarymanagement.Repository.StaffRepository;
 import org.example.librarymanagement.Services.UsersService;
+import org.example.librarymanagement.Utils.ConvertByteToBase64;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -52,6 +53,7 @@ public class UsersServiceImpl implements UsersService {
                 modelMapper.map(libraryCardEntity, libraryCardDTO);
                 return libraryCardDTO;
             }).toList();
+            readerDTO.setAvatar(ConvertByteToBase64.toBase64(readersEntity.getAvatar()));
             readerDTO.setLibraryCardDTOS(libraryCardDTOS);
             return readerDTO;
         }).toList();
@@ -66,6 +68,7 @@ public class UsersServiceImpl implements UsersService {
             StaffDTO staffDTO = new StaffDTO();
             modelMapper.map(staffEntity, staffDTO);
             staffDTO.setIdUser(staffEntity.getIdStaff());
+            staffDTO.setAvatar(ConvertByteToBase64.toBase64(staffEntity.getAvatar()));
             return staffDTO;
         }).toList();
         return new PageImpl<>(staffDTOS, staffEntities.getPageable(), staffEntities.getTotalElements());
@@ -80,6 +83,7 @@ public class UsersServiceImpl implements UsersService {
             ReaderDTO readerDTO = new ReaderDTO();
             modelMapper.map(readersEntity, readerDTO);
             readerDTO.setIdUser(readersEntity.getIdReader());
+            readerDTO.setAvatar(ConvertByteToBase64.toBase64(readersEntity.getAvatar()));
             List<LibraryCardDTO> libraryCardDTOS = readersEntity.getLibraryCardEntities().stream().map(libraryCardEntity -> {
                 LibraryCardDTO libraryCardDTO = new LibraryCardDTO();
                 modelMapper.map(libraryCardEntity, libraryCardDTO);
@@ -105,6 +109,7 @@ public class UsersServiceImpl implements UsersService {
             StaffEntity staffEntity = staffRepository.findById(idStaff).get();
             StaffDTO staffDTO = new StaffDTO();
             modelMapper.map(staffEntity, staffDTO);
+            staffDTO.setAvatar(ConvertByteToBase64.toBase64(staffEntity.getAvatar()));
             staffDTO.setIdUser(staffEntity.getIdStaff());
             dataResponse.setMessage("Success");
             dataResponse.setData(staffDTO);

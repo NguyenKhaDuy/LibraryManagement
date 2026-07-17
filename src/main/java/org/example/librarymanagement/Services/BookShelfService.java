@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 public interface BookShelfService {
     Page<BookshelfDTO> getAllBookShelf(Integer pageNo);
+    DataResponse getAllBookShelf();
     Object getBookShelfById(Long idBookshelf);
     MessageResponse addBookShelf(BookShelfRequest bookShelfRequest);
     MessageResponse updateBookShelf(BookShelfRequest bookShelfRequest);

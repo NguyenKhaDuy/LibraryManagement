@@ -21,7 +21,11 @@ export async function renderProfile() {
     els.pageRoot.innerHTML = '<div class="page-stack"><div class="empty-state">Đang tải hồ sơ...</div></div>';
     try {
         const profile = unwrapData(await api((isUser ? "/api/reader/idReader=" : "/api/staff/idStaff=") + enc(state.session.idUser)));
-        const fields = isUser ? userUpdateFields : staffUpdateFields;
+        const fields = isUser
+            ? userUpdateFields.filter(function (f) {
+                return f.name !== "status";
+            })
+            : staffUpdateFields;
         els.pageRoot.innerHTML = [
             '<div class="grid-2">',
             '<section class="surface"><div class="section-header"><div class="section-title"><h2>Thông tin cá nhân</h2><p>Cập nhật dữ liệu liên hệ và trạng thái tài khoản.</p></div></div><div class="drawer-body">',

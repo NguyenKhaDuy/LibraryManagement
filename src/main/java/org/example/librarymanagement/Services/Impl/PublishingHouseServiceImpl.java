@@ -40,6 +40,21 @@ public class PublishingHouseServiceImpl implements PublishingHouseService {
     }
 
     @Override
+    public DataResponse getAllPublishingHouses() {
+        List<PublishingHouseEntity> publishingHouseEntities = publishingHouseRepository.findAll();
+        List<PublishingHouseDTO> publishingHouseDTOS = publishingHouseEntities.stream().map(publishingHouseEntity -> {
+            PublishingHouseDTO publishingHouseDTO = new PublishingHouseDTO();
+            modelMapper.map(publishingHouseEntity, publishingHouseDTO);
+            return publishingHouseDTO;
+        }).toList();
+        DataResponse dataResponse = new DataResponse();
+        dataResponse.setData(publishingHouseDTOS);
+        dataResponse.setStatus(HttpStatus.OK);
+        dataResponse.setMessage("Success");
+        return dataResponse;
+    }
+
+    @Override
     public Object getPublishingHouseById(Long id) {
         MessageResponse messageResponse = new MessageResponse();
         DataResponse dataResponse = new DataResponse();

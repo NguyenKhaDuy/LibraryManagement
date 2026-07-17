@@ -1,8 +1,36 @@
 import { STATUS_VALUES } from "../core/constants.js";
-import { get } from "../core/utils.js";
+import { get, getCurrentRole } from "../core/utils.js";
 
 export function field(name, label, type, options) {
     return Object.assign({ name: name, label: label, type: type || "text" }, options || {});
+}
+
+
+
+
+export function getStaffUpdateFields() {
+    const role = getCurrentRole();
+    console.log(role);
+
+    return staffUpdateFields.map(function (f) {
+
+        // chỉ STAFF mới bị khóa
+        if (
+            role === "STAFF" &&
+            [
+                "status",
+                "dateStart",
+                "wage",
+                "position"
+            ].includes(f.name)
+        ) {
+            return Object.assign({}, f, {
+                disabled: true
+            });
+        }
+
+        return f;
+    });
 }
 
 export const registerFields = [
@@ -32,7 +60,7 @@ export const userUpdateFields = [
 export const staffUpdateFields = userUpdateFields.concat([
     field("dateStart", "Ngày bắt đầu", "date"),
     field("wage", "Lương", "number"),
-    field("position", "Vị trí")
+    field("position", "Vị trí", "text")
 ]);
 
 export const staffCreateFields = registerFields.concat([
@@ -49,10 +77,25 @@ export const bookFields = [
     field("edition", "Lần tái bản", "number"),
     field("language", "Ngôn ngữ"),
     field("valueOfBook", "Giá trị", "number"),
-    field("authorId", "Mã tác giả", "text", { required: true }),
-    field("categoryId", "Mã thể loại", "number", { required: true }),
-    field("bookShelfId", "Mã kệ", "number", { required: true }),
-    field("publisherId", "Mã nhà xuất bản", "number", { required: true }),
+    field("authorId", "Tác giả", "select", {
+        required: true,
+        options: []
+    }),
+
+    field("categoryId", "Thể loại", "select", {
+        required: true,
+        options: []
+    }),
+
+    field("bookShelfId", "Kệ sách", "select", {
+        required: true,
+        options: []
+    }),
+
+    field("publisherId", "Nhà xuất bản", "select", {
+        required: true,
+        options: []
+    }),
     field("status", "Trạng thái", "select", { options: STATUS_VALUES }),
     field("description", "Mô tả", "textarea", { wide: true }),
     field("images", "Ảnh sách", "file", { wide: true, multiple: true, accept: "image/*" })

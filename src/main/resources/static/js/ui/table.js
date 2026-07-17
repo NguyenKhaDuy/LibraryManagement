@@ -35,14 +35,35 @@ export function metric(label, value, tone) {
 
 export function chartPanel(title, months) {
     const rows = Array.isArray(months) ? months : [];
-    const max = rows.reduce(function (m, item) { return Math.max(m, Number(item.total) || 0); }, 0) || 1;
-    return '<section class="surface"><div class="section-header"><div class="section-title"><h2>' + esc(title) + '</h2></div></div><div class="chart">' +
-        (rows.length ? rows.map(function (item) {
-            const total = Number(item.total) || 0;
-            const width = Math.max(2, Math.round(total / max * 100));
-            return '<div class="bar-row"><span>T' + esc(item.month) + '</span><span class="bar-track"><span class="bar-fill" style="width:' + width + '%"></span></span><strong>' + esc(total) + '</strong></div>';
-        }).join("") : '<div class="empty-state">Chưa có dữ liệu tháng.</div>') +
-        '</div></section>';
+    const max = rows.reduce(function (m, item) {
+        return Math.max(m, Number(item.total) || 0);
+    }, 0) || 1;
+
+    return '<section class="surface">' +
+        '<div class="section-header">' +
+        '<div class="section-title"><h2>' + esc(title) + '</h2></div>' +
+        '</div>' +
+
+        '<div class="column-chart">' +
+
+        (rows.length
+            ? rows.map(function (item) {
+
+                const total = Number(item.total) || 0;
+                const height = Math.max(8, Math.round(total / max * 220));
+
+                return '<div class="column-item">' +
+                    '<span class="column-value">' + total + '</span>' +
+                    '<div class="column-bar">' +
+                    '<div class="column-fill" style="height:' + height + 'px"></div>' +
+                    '</div>' +
+                    '<span class="column-label">T' + esc(item.month) + '</span>' +
+                    '</div>';
+
+            }).join("")
+            : '<div class="empty-state">Chưa có dữ liệu tháng.</div>')
+
+        + '</div></section>';
 }
 
 export function recentTicketsPanel(rows) {

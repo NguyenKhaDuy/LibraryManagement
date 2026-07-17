@@ -29,6 +29,12 @@ public class AuthorController {
         return new ResponseEntity<>(dataResponse, HttpStatus.OK);
     }
 
+    @GetMapping(value = "/api/admin/authors")
+    public ResponseEntity<Object> getAllAuthors() {
+        DataResponse dataResponse = authorService.getAllAuthors();
+        return new ResponseEntity<>(dataResponse, HttpStatus.OK);
+    }
+
     @GetMapping(value = "/api/admin/author/id-author={idauthor}")
     public ResponseEntity<Object> getAuthorById(@PathVariable("idauthor") String idauthor) {
         Object result = authorService.getAuthorById(idauthor);

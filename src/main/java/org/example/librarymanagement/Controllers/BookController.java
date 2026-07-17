@@ -40,6 +40,12 @@ public class BookController {
         return new ResponseEntity<>(dataResponse, HttpStatus.OK);
     }
 
+    @GetMapping(value = "/api/books")
+    public ResponseEntity<Object> getBooks() {
+        DataResponse dataResponse = booksService.getBooks();
+        return new ResponseEntity<>(dataResponse, HttpStatus.OK);
+    }
+
     @GetMapping(value = "/api/book/id-book={id}")
     public ResponseEntity<Object> getBookById(@PathVariable("id") String id) {
         Object result = booksService.getBooksById(id);

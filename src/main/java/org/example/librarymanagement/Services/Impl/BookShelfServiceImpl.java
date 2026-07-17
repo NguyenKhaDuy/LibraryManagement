@@ -41,6 +41,21 @@ public class BookShelfServiceImpl implements BookShelfService {
     }
 
     @Override
+    public DataResponse getAllBookShelf() {
+        List<BookshelfEntity> bookshelfEntities = bookshelfRepository.findAll();
+        List<BookshelfDTO> bookshelfDTOS = bookshelfEntities.stream().map(bookshelfEntity -> {
+            BookshelfDTO bookshelfDTO = new BookshelfDTO();
+            modelMapper.map(bookshelfEntity, bookshelfDTO);
+            return bookshelfDTO;
+        }).toList();
+        DataResponse dataResponse = new DataResponse();
+        dataResponse.setData(bookshelfDTOS);
+        dataResponse.setStatus(HttpStatus.OK);
+        dataResponse.setMessage("OK");
+        return dataResponse;
+    }
+
+    @Override
     public Object getBookShelfById(Long idBookshelf) {
         MessageResponse messageResponse = new MessageResponse();
         DataResponse dataResponse = new DataResponse();

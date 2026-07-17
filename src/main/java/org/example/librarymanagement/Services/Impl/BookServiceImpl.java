@@ -96,6 +96,52 @@ public class BookServiceImpl implements BooksService {
     }
 
     @Override
+    public DataResponse getBooks() {
+        List<BooksEntity> booksEntities = bookRepository.findAll();
+        List<BooksDTO> booksDTOS = booksEntities.stream().map(booksEntity -> {
+            BooksDTO booksDTO = new BooksDTO();
+
+            modelMapper.map(booksEntity, booksDTO);
+
+            //IMAGE
+            List<ImageDTO> imageDTOS = booksEntity.getImageEntities().stream().map(imageEntity -> {
+                ImageDTO imageDTO = new ImageDTO();
+                imageDTO.setIdImage(imageEntity.getIdImage());
+                imageDTO.setImageBase64(ConvertByteToBase64.toBase64(imageEntity.getImage()));
+                return imageDTO;
+            }).toList();
+            booksDTO.setImageDTOS(imageDTOS);
+
+            //tác giả
+            AuthorDTO authorDTO = new AuthorDTO();
+            modelMapper.map(booksEntity.getAuthorEntity(), authorDTO);
+            booksDTO.setAuthorDTO(authorDTO);
+
+            //catefory
+            CategoryDTO categoryDTO = new CategoryDTO();
+            modelMapper.map(booksEntity.getCategoryEntity(), categoryDTO);
+            booksDTO.setCategoryDTO(categoryDTO);
+
+            //kệ sách
+            BookshelfDTO bookshelfDTO = new BookshelfDTO();
+            modelMapper.map(booksEntity.getBookshelfEntity(), bookshelfDTO);
+            booksDTO.setBookshelfDTO(bookshelfDTO);
+
+            //nhà xuất bản
+            PublishingHouseDTO publishingHouseDTO = new PublishingHouseDTO();
+            modelMapper.map(booksEntity.getPublishingHouseEntity(), publishingHouseDTO);
+            booksDTO.setPublishingHouseDTO(publishingHouseDTO);
+
+            return booksDTO;
+        }).toList();
+        DataResponse dataResponse = new DataResponse();
+        dataResponse.setData(booksDTOS);
+        dataResponse.setStatus(HttpStatus.OK);
+        dataResponse.setMessage("OK");
+        return dataResponse;
+    }
+
+    @Override
     public Object getBooksById(String idBook) {
         MessageResponse messageResponse = new MessageResponse();
         DataResponse dataResponse = new DataResponse();

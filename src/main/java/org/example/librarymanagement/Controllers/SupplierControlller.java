@@ -28,6 +28,12 @@ public class SupplierControlller {
         return new ResponseEntity<>(dataResponse, HttpStatus.OK);
     }
 
+    @GetMapping(value = "/api/admin/suppliers")
+    public ResponseEntity<Object> getSupplier() {
+        DataResponse dataResponse = supplierService.getAllSuppliers();
+        return new ResponseEntity<>(dataResponse, HttpStatus.OK);
+    }
+
     @GetMapping(value = "/api/admin/supplier/idSupplier={id}")
     public ResponseEntity<Object> getSupplierById(@PathVariable("id") Long id) {
         Object result = supplierService.getSupplierById(id);

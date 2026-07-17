@@ -7,6 +7,16 @@ export function get(obj, path) {
     }, obj);
 }
 
+// core/auth.js
+export function getCurrentRole() {
+    try {
+        const session = JSON.parse(localStorage.getItem("ktt.session"));
+        return session?.role || "";
+    } catch (e) {
+        return "";
+    }
+}
+
 export function normalizeRows(data) {
     if (!data) return [];
     if (Array.isArray(data)) return data;

@@ -40,6 +40,21 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
+    public DataResponse getAllSuppliers() {
+        List<SupplierEntity> supplierEntities = supplierRepository.findAll();
+        List<SupplierDTO> supplierDTOs = supplierEntities.stream().map(supplierEntity -> {
+            SupplierDTO supplierDTO = new SupplierDTO();
+            modelMapper.map(supplierEntity, supplierDTO);
+            return supplierDTO;
+        }).toList();
+        DataResponse dataResponse = new DataResponse();
+        dataResponse.setData(supplierDTOs);
+        dataResponse.setStatus(HttpStatus.OK);
+        dataResponse.setMessage("Success");
+        return dataResponse;
+    }
+
+    @Override
     public Object getSupplierById(Long idSupplier) {
         MessageResponse messageResponse = new MessageResponse();
         DataResponse dataResponse = new DataResponse();

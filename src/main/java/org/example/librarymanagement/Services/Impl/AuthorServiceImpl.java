@@ -41,6 +41,21 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
+    public DataResponse getAllAuthors() {
+        DataResponse dataResponse = new DataResponse();
+        List<AuthorEntity> authorEntities = authorRepository.findAll();
+        List<AuthorDTO> authorDTOS = authorEntities.stream().map(authorEntity -> {
+            AuthorDTO authorDTO = new AuthorDTO();
+            modelMapper.map(authorEntity, authorDTO);
+            return authorDTO;
+        }).toList();
+        dataResponse.setData(authorDTOS);
+        dataResponse.setStatus(HttpStatus.OK);
+        dataResponse.setMessage("OK");
+        return dataResponse;
+    }
+
+    @Override
     public Object getAuthorById(String idAuthor) {
         MessageResponse messageResponse = new MessageResponse();
         DataResponse dataResponse = new DataResponse();

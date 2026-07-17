@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 public class BookShelfController {
     @Autowired
@@ -25,6 +27,12 @@ public class BookShelfController {
         dataResponse.setStatus(HttpStatus.OK);
         dataResponse.setCurrent_page(pageNo);
         dataResponse.setTotal_pages(bookshelfDTOS.getTotalPages());
+        return new ResponseEntity<>(dataResponse, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/api/admin/book-shelfs")
+    public ResponseEntity<Object> getAllBookShelf() {
+        DataResponse dataResponse = bookShelfService.getAllBookShelf();
         return new ResponseEntity<>(dataResponse, HttpStatus.OK);
     }
 

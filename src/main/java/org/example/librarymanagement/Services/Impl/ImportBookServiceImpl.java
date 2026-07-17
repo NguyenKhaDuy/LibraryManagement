@@ -7,6 +7,7 @@ import org.example.librarymanagement.Entity.StaffEntity;
 import org.example.librarymanagement.Entity.SupplierEntity;
 import org.example.librarymanagement.Model.DTO.*;
 import org.example.librarymanagement.Model.Requests.ImportBookRequest;
+import org.example.librarymanagement.Model.Requests.ImportDetailBookRequest;
 import org.example.librarymanagement.Model.Responses.DataResponse;
 import org.example.librarymanagement.Model.Responses.MessageResponse;
 import org.example.librarymanagement.Repository.BookRepository;
@@ -170,8 +171,8 @@ public class ImportBookServiceImpl implements ImportBookService {
     @Override
     public MessageResponse addImportBook(ImportBookRequest importBookRequest) {
         MessageResponse messageResponse = new MessageResponse();
-        StaffEntity staffEntity = new StaffEntity();
-        SupplierEntity supplierEntity = new SupplierEntity();
+        StaffEntity staffEntity = null;
+        SupplierEntity supplierEntity = null;
         ImportBookEntity importBookEntity = new ImportBookEntity();
         modelMapper.map(importBookRequest, importBookEntity);
         importBookEntity.setIdImport(RandomIdUtils.generateRandomId("IMP", 15));
@@ -192,16 +193,24 @@ public class ImportBookServiceImpl implements ImportBookService {
         importBookEntity.setStaffEntity(staffEntity);
         importBookEntity.setSupplierEntity(supplierEntity);
 
-        List<ImportBookDetailEntity> importBookDetailEntities = new ArrayList<>();
-        importBookRequest.getImportDetailBookRequests().stream().forEach(importDetailBookRequest -> {
-            ImportBookDetailEntity importBookDetailEntity = new ImportBookDetailEntity();
-            modelMapper.map(importDetailBookRequest, importBookDetailEntity);
-            BooksEntity booksEntity= bookRepository.findById(importDetailBookRequest.getBookId()).get();
-            importBookDetailEntity.setBooksEntity(booksEntity);
-            importBookDetailEntity.setImportBookEntity(importBookEntity);
-            importBookDetailEntities.add(importBookDetailEntity);
-        });
-        importBookEntity.setImportBookDetailEntities(importBookDetailEntities);
+        List<ImportBookDetailEntity> details = new ArrayList<>();
+
+        for (ImportDetailBookRequest req : importBookRequest.getImportDetailBookRequests()) {
+
+            ImportBookDetailEntity detail = new ImportBookDetailEntity();
+
+            BooksEntity book = bookRepository.findById(req.getBookId()).orElseThrow();
+
+            detail.setBooksEntity(book);
+            detail.setNote(req.getNote());
+            detail.setPrice(req.getPrice());
+            detail.setQuantity(req.getQuantity());
+            detail.setTotalPrice(req.getTotalPrice());
+
+            detail.setImportBookEntity(importBookEntity);
+
+            details.add(detail);
+        }
         importBookReopsitory.save(importBookEntity);
         messageResponse.setMessage("Success");
         messageResponse.setStatus(HttpStatus.OK);
@@ -239,18 +248,25 @@ public class ImportBookServiceImpl implements ImportBookService {
         importBookEntity.setStaffEntity(staffEntity);
         importBookEntity.setSupplierEntity(supplierEntity);
 
-        importBookEntity.getImportBookDetailEntities().clear();
+        List<ImportBookDetailEntity> details = importBookEntity.getImportBookDetailEntities();
+        details.clear();
 
-        List<ImportBookDetailEntity> importBookDetailEntities = new ArrayList<>();
-        importBookRequest.getImportDetailBookRequests().stream().forEach(importDetailBookRequest -> {
-            ImportBookDetailEntity importBookDetailEntity = new ImportBookDetailEntity();
-            modelMapper.map(importDetailBookRequest, importBookDetailEntity);
-            BooksEntity booksEntity= bookRepository.findById(importDetailBookRequest.getBookId()).get();
-            importBookDetailEntity.setBooksEntity(booksEntity);
-            importBookDetailEntity.setImportBookEntity(importBookEntity);
-            importBookDetailEntities.add(importBookDetailEntity);
-        });
-        importBookEntity.setImportBookDetailEntities(importBookDetailEntities);
+        for (ImportDetailBookRequest req : importBookRequest.getImportDetailBookRequests()) {
+
+            ImportBookDetailEntity detail = new ImportBookDetailEntity();
+
+            BooksEntity book = bookRepository.findById(req.getBookId()).orElseThrow();
+
+            detail.setBooksEntity(book);
+            detail.setNote(req.getNote());
+            detail.setPrice(req.getPrice());
+            detail.setQuantity(req.getQuantity());
+            detail.setTotalPrice(req.getTotalPrice());
+
+            detail.setImportBookEntity(importBookEntity);
+
+            details.add(detail);
+        }
         importBookReopsitory.save(importBookEntity);
         messageResponse.setMessage("Success");
         messageResponse.setStatus(HttpStatus.OK);

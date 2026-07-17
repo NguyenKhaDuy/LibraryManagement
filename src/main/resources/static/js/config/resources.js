@@ -1,7 +1,7 @@
 import { enc } from "../core/utils.js";
 import {
     authorFields,
-    categoryFields,
+    categoryFields, getStaffUpdateFields,
     libraryCardFields,
     publisherFields,
     registerFields,
@@ -32,7 +32,7 @@ export const resourceConfigs = {
         list: "/api/admin/staff",
         detail: function (row) { return "/api/staff/idStaff=" + enc(row.idUser || row.idStaff); },
         create: { label: "Thêm nhân viên", method: "POST", path: "/api/admin/register/staff", fields: staffCreateFields },
-        update: { method: "PUT", path: "/api/staff", fields: staffUpdateFields },
+        update: { method: "PUT", path: "/api/staff", fields: getStaffUpdateFields },
         remove: function (row) { return "/api/staff/idStaff=" + enc(row.idUser || row.idStaff); },
         columns: [
             ["idUser", "Mã"], ["fullName", "Họ tên"], ["position", "Vị trí"], ["phone", "Điện thoại"], ["status", "Trạng thái"]

@@ -26,22 +26,48 @@ export async function renderReaderDashboard() {
         const activeLoans = tickets.filter(function (ticket) {
             return ["COMPLETED", "RETURNED", "CANCELLED", "REJECTED"].indexOf(ticket.status) < 0;
         });
-        const cardCount = (profile.libraryCardDTOS || []).length;
+        const libraryCards = profile.libraryCardDTOS || [];
+        const cardCount = libraryCards.length;
 
         els.pageRoot.innerHTML = [
             '<div class="page-stack reader-home">',
             '<section class="surface reader-hero">',
+
             '<div>',
             '<p class="eyebrow">Xin chào</p>',
             '<h2>' + esc(profile.fullName || state.session.username || "Độc giả") + '</h2>',
             '<p>Theo dõi sách đang mượn, giỏ mượn và tìm nhanh đầu sách phù hợp trong thư viện.</p>',
-            '<div class="button-row"><button class="button button-primary" data-go="catalog" type="button">Tra cứu sách</button><button class="button button-secondary" data-go="myLoans" type="button">Xem phiếu mượn</button></div>',
+
+            '<div class="button-row">',
+            '<button class="button button-primary" data-go="catalog" type="button">Tra cứu sách</button>',
+            '<button class="button button-secondary" data-go="myLoans" type="button">Xem phiếu mượn</button>',
             '</div>',
-            '<div class="reader-card-status">',
-            '<span>Thẻ thư viện</span>',
-            '<strong>' + esc(cardCount ? "Đã cấp" : "Chưa có thẻ") + '</strong>',
-            '<small>' + esc(profile.status || "Đang cập nhật") + '</small>',
+
+            libraryCards.length
+                ? '<div class="library-card-grid">' +
+                libraryCards.map(function(card) {
+                    return [
+                        '<div class="library-card-item">',
+
+                        '<div class="card-header">',
+                        '<strong>Thẻ thư viện</strong>',
+                        '<span class="card-status">' + esc(card.status || "") + '</span>',
+                        '</div>',
+
+                        '<div class="card-body">',
+                        '<p><span>Mã thẻ</span><b>' + esc(card.idCard || "") + '</b></p>',
+                        '<p><span>Ngày cấp</span><b>' + esc(card.dateOfIssue || "") + '</b></p>',
+                        '<p><span>Hết hạn</span><b>' + esc(card.expirationDate || "") + '</b></p>',
+                        '</div>',
+
+                        '</div>'
+                    ].join("");
+                }).join("") +
+                '</div>'
+                : '<div class="empty-state">Chưa có thẻ thư viện</div>',
+
             '</div>',
+
             '</section>',
             '<div class="metrics-grid">',
             metric("Phiếu mượn đang xử lý", activeLoans.length, "green"),
