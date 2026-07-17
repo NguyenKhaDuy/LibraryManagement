@@ -18,15 +18,15 @@ export const navByRole = {
     STAFF: [
         group("Vận hành"),
         nav("dashboard", "Tổng quan", "⌂"),
-        nav("books", "Kho sách", "B"),
+        // nav("books", "Kho sách", "B"),
         nav("circulation", "Mượn trả", "T"),
         nav("readers", "Độc giả", "R"),
         nav("libraryCards", "Thẻ thư viện", "C"),
-        group("Quản trị"),
-        nav("staff", "Nhân viên", "S"),
+        // group("Quản trị"),
+        // nav("staff", "Nhân viên", "S"),
         nav("imports", "Nhập sách", "I"),
-        nav("suppliers", "Nhà cung cấp", "N"),
-        nav("setup", "Danh mục", "D"),
+        // nav("suppliers", "Nhà cung cấp", "N"),
+        // nav("setup", "Danh mục", "D"),
         nav("profile", "Hồ sơ", "◇")
     ],
     ADMIN: [

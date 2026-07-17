@@ -17,12 +17,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 @Service
 public class BookServiceImpl implements BooksService {
@@ -336,22 +338,34 @@ public class BookServiceImpl implements BooksService {
     }
 
     private boolean hasImages(BookRequest bookRequest) {
-        return bookRequest.getImages() != null && bookRequest.getImages().stream().anyMatch(image -> image != null && !image.isEmpty());
+        return bookRequest != null
+                && bookRequest.getImages() != null
+                && bookRequest.getImages().stream()
+                .filter(Objects::nonNull)
+                .anyMatch(image -> !image.isEmpty());
     }
 
     private void replaceImages(BooksEntity booksEntity, BookRequest bookRequest) {
         booksEntity.getImageEntities().clear();
-        bookRequest.getImages().stream()
-                .filter(image -> image != null && !image.isEmpty())
-                .forEach(image -> {
-                    try {
-                        ImageEntity imageEntity = new ImageEntity();
-                        imageEntity.setImage(image.getBytes());
-                        imageEntity.setBooksEntity(booksEntity);
-                        booksEntity.getImageEntities().add(imageEntity);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+
+        if (bookRequest.getImages() == null || bookRequest.getImages().isEmpty()) {
+            return;
+        }
+
+        for (MultipartFile file : bookRequest.getImages()) {
+            if (file == null || file.isEmpty()) {
+                continue;
+            }
+
+            try {
+                ImageEntity imageEntity = new ImageEntity();
+                imageEntity.setImage(file.getBytes());
+                imageEntity.setBooksEntity(booksEntity);
+
+                booksEntity.getImageEntities().add(imageEntity);
+            } catch (IOException e) {
+                throw new RuntimeException("Không thể đọc file ảnh: " + file.getOriginalFilename(), e);
+            }
+        }
     }
 }

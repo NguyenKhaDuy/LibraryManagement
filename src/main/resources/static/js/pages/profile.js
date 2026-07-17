@@ -25,7 +25,14 @@ export async function renderProfile() {
             ? userUpdateFields.filter(function (f) {
                 return f.name !== "status";
             })
-            : staffUpdateFields;
+            : staffUpdateFields.map(function (f) {
+                if (["status", "position", "wage", "dateStart"].includes(f.name)) {
+                    return Object.assign({}, f, {
+                        disabled: true
+                    });
+                }
+                return f;
+            });
         els.pageRoot.innerHTML = [
             '<div class="grid-2">',
             '<section class="surface"><div class="section-header"><div class="section-title"><h2>Thông tin cá nhân</h2><p>Cập nhật dữ liệu liên hệ và trạng thái tài khoản.</p></div></div><div class="drawer-body">',
