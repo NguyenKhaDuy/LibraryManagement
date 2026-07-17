@@ -1,9 +1,9 @@
 import { api, submitJson } from "../core/api.js";
 import { els } from "../core/dom.js";
 import { state } from "../core/state.js";
-import { enc, errorText, esc, firstImage, get, normalizeRows, query, statusClass, statusText, unwrapData, valueOf } from "../core/utils.js";
+import { enc, errorText, esc, firstImage, bookImages, get, normalizeRows, query, statusClass, statusText, unwrapData, valueOf } from "../core/utils.js";
 import { bookFields, mapBookToForm } from "../config/fields.js";
-import { fieldInline, formDataValues, formHtml } from "../ui/forms.js";
+import { bindImagePreviews, fieldInline, formDataValues, formHtml, selectInline } from "../ui/forms.js";
 import { toast } from "../ui/feedback.js";
 import { openDrawer, closeDrawer } from "../ui/drawer.js";
 import { detailGrid } from "../ui/table.js";
@@ -11,6 +11,15 @@ import { errorHtml, setTitle } from "../ui/view.js";
 
 export async function renderBooks(readerMode) {
     setTitle(readerMode ? "Tra cứu sách" : "Kho sách", readerMode ? "Dành cho độc giả" : "Quản lý danh mục");
+    let publisherOptions = [];
+    try {
+        const pubData = await api("/api/admin/publishing-house?pageNo=1");
+        publisherOptions = normalizeRows(pubData).map(function (publisher) {
+            return { value: publisher.idPublishingHouse, label: publisher.name || ("NXB #" + publisher.idPublishingHouse) };
+        });
+    } catch (err) {
+        publisherOptions = [];
+    }
     els.pageRoot.innerHTML = [
         '<section class="surface">',
         '<div class="section-header">',
@@ -22,7 +31,7 @@ export async function renderBooks(readerMode) {
         fieldInline("filterAuthor", "Mã tác giả", "text"),
         fieldInline("filterCategory", "Mã thể loại", "number"),
         fieldInline("filterShelf", "Mã kệ", "number"),
-        fieldInline("filterPublisher", "Mã NXB", "number"),
+        selectInline("filterPublisher", "Nhà xuất bản", publisherOptions),
         '<button class="button button-secondary" id="bookFilterButton" type="button">Lọc</button>',
         '</div>',
         '<div class="record-list" id="booksGrid"><div class="empty-state">Đang tải sách...</div></div>',
@@ -138,9 +147,13 @@ async function openBookDetail(book, readerMode) {
 }
 
 function renderBookDetail(book, readerMode) {
+    const images = bookImages(book);
+    const coverHtml = images.length
+        ? '<div class="image-gallery">' + images.map(function (src) { return '<img src="' + src + '" alt="">'; }).join("") + "</div>"
+        : '<div class="book-cover detail-cover">' + esc((book.nameBook || "S").slice(0, 1)) + "</div>";
     openDrawer("Chi tiết sách", "Kho sách", [
         '<div class="page-stack">',
-        '<div class="book-cover detail-cover">' + (firstImage(book) ? '<img src="' + firstImage(book) + '" alt="">' : esc((book.nameBook || "S").slice(0, 1))) + '</div>',
+        coverHtml,
         detailGrid([
             ["Mã sách", book.idBook], ["Tên sách", book.nameBook], ["Tác giả", get(book, "authorDTO.fullName")],
             ["Thể loại", get(book, "categoryDTO.nameCategory")], ["Kệ", get(book, "bookshelfDTO.location")],
@@ -160,8 +173,15 @@ function renderBookDetail(book, readerMode) {
 
 function openBookForm(book) {
     const isEdit = Boolean(book);
-    const fields = isEdit ? bookFields : bookFields.filter(function (f) { return f.name !== "idBook" && f.name !== "status"; });
+    let fields = isEdit ? bookFields : bookFields.filter(function (f) { return f.name !== "idBook" && f.name !== "status"; });
+    if (isEdit) {
+        fields = fields.map(function (f) {
+            if (f.name !== "images") return f;
+            return Object.assign({}, f, { existingImages: bookImages(book) });
+        });
+    }
     openDrawer(isEdit ? "Cập nhật sách" : "Thêm sách", "Kho sách", formHtml("bookForm", fields, isEdit ? mapBookToForm(book) : {}, isEdit ? "Lưu thay đổi" : "Thêm sách"), function () {
+        bindImagePreviews(document.getElementById("bookForm"));
         document.getElementById("bookForm").addEventListener("submit", async function (event) {
             event.preventDefault();
             await submitBookForm(isEdit ? "PUT" : "POST", event.currentTarget, fields);

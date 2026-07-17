@@ -58,12 +58,14 @@ async function openImportDetail(row) {
 
 function renderImportDetail(row) {
     openDrawer("Phiếu nhập", row.idImport, [
+        '<div class="page-stack">',
         detailGrid([
             ["Mã phiếu", row.idImport], ["Ngày nhập", row.importDate], ["Nhân viên", row.staffName],
             ["Nhà cung cấp", get(row, "supplierDTO.nameSupplier")], ["Tổng tiền", row.totalPrice], ["Ghi chú", row.note]
         ]),
         '<div class="button-row"><button class="button button-primary" id="editImportButton" type="button">Sửa phiếu</button><button class="button button-danger" id="deleteImportButton" type="button">Xóa phiếu</button></div>',
-        detailItems(row.importBookDetailDTOS || [])
+        detailItems(row.importBookDetailDTOS || []),
+        '</div>'
     ].join(""), function () {
         document.getElementById("editImportButton").addEventListener("click", function () { openImportForm(row); });
         document.getElementById("deleteImportButton").addEventListener("click", async function () {

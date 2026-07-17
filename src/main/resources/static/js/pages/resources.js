@@ -65,8 +65,10 @@ async function openResourceDetail(config, row) {
     try {
         const detail = config.detail ? unwrapData(await api(config.detail(row))) : row;
         openDrawer(config.title, primaryLabel(detail), [
+            '<div class="page-stack">',
             detailObject(detail),
-            '<div class="button-row"><button class="button button-primary" id="editResourceButton" type="button">Sửa</button><button class="button button-danger" id="deleteResourceButton" type="button">Xóa</button></div>'
+            '<div class="button-row"><button class="button button-primary" id="editResourceButton" type="button">Sửa</button><button class="button button-danger" id="deleteResourceButton" type="button">Xóa</button></div>',
+            '</div>'
         ].join(""), function () {
             document.getElementById("editResourceButton").addEventListener("click", function () { openResourceForm(config, detail); });
             document.getElementById("deleteResourceButton").addEventListener("click", async function () {
